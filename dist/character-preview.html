@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Character Preview · Sunpetal Valley</title>
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+  <link rel="stylesheet" href="./character-preview.css">
+</head>
+<body>
+  <header class="page-header">
+    <div>
+      <a class="brand" href="./">Sunpetal Valley</a>
+      <h1>Character preview</h1>
+    </div>
+    <a class="return" href="./">Back to the reef</a>
+  </header>
+  <main>
+    <section class="viewer" aria-label="3D character viewer">
+      <canvas id="preview" aria-label="Selected character in the Sunpetal homebase"></canvas>
+      <div class="scene-label"><span id="model-title">Blossom Fairy</span><small>Sunpetal Homebase</small></div>
+      <div class="finish toolbar" role="group" aria-label="Material finish">
+        <button type="button" data-finish="original" aria-pressed="false">Original</button>
+        <button type="button" data-finish="softer" aria-pressed="true">Softer</button>
+      </div>
+      <p class="status" id="status" role="status">Loading Blossom Fairy…</p>
+      <div class="camera toolbar" aria-label="Camera distance">
+        <button type="button" data-distance="game" aria-pressed="true">Game distance</button>
+        <button type="button" data-distance="close" aria-pressed="false">Close-up</button>
+        <button type="button" data-distance="face" aria-pressed="false">Face</button>
+      </div>
+    </section>
+    <aside class="controls" aria-label="Character and animation controls">
+      <div>
+        <h2>Choose a character</h2>
+        <div id="model-list" class="model-list"></div>
+      </div>
+      <div class="animation">
+        <label for="animation">Animation</label>
+        <select id="animation" disabled><option>Loading…</option></select>
+        <div class="toolbar motion">
+          <button type="button" id="play" aria-pressed="true" disabled>Pause</button>
+          <button type="button" id="restart" disabled>Replay</button>
+        </div>
+      </div>
+      <div class="turn">
+        <span>Rotate model</span>
+        <div class="toolbar motion">
+          <button type="button" id="turn-left">Turn left</button>
+          <button type="button" id="turn-right">Turn right</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+  <script type="module" src="./character-preview.js"></script>
+</body>
+</html>

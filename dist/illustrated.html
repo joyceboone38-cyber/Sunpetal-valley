@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sunpetal Valley · Reef Preview</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#041324;color:#fff3e3;font:16px system-ui,sans-serif;overflow:hidden}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #79d8f18c;background:#092a47e8;border-radius:12px;padding:.65rem 1rem}button:hover,button:focus-visible{background:#254d75;outline:2px solid #9ce9ff}canvas{position:absolute;width:100%;height:100%;touch-action:none}header,.quest,.controls,.actions,.location{position:absolute;z-index:1}.glass{background:linear-gradient(145deg,#06182cf5,#102445ed);border:1px solid #8cdcf768;box-shadow:0 8px 32px #02091780;border-radius:16px}header{top:20px;left:22px;padding:12px 18px}h1,h2,p{margin:0}h1{font:italic bold clamp(1.25rem,3vw,2rem) Georgia;color:#ffe0ed}header span{color:#a3eaff;font-size:.85rem;letter-spacing:.13em}.quest{right:22px;top:20px;width:min(290px,42vw);padding:14px 16px}.quest h2{font:700 1.2rem Georgia;color:#ffd79f;margin-bottom:5px}.quest p{color:#e6f4ff;line-height:1.4}.location{left:50%;bottom:75px;transform:translateX(-50%);background:#061825d9;padding:6px 14px;border-radius:20px;white-space:nowrap;color:#b2eeff}.controls{bottom:20px;left:22px;padding:10px 14px;color:#d4eaff}.actions{bottom:20px;right:22px;display:flex;gap:8px}.actions button:first-child{background:#682c69}.touch{display:none}@media(max-width:720px),(pointer:coarse){.controls{display:none}.touch{display:inline-block}.quest{top:82px;right:12px;width:min(270px,74vw);font-size:.9rem}header{top:12px;left:12px}.actions{right:12px;bottom:12px}.location{bottom:63px}.touch-help{display:block}}@media(min-width:721px) and (pointer:fine){.touch-help{display:none}}dialog{color:#ffe8ef;padding:24px;max-width:min(420px,90vw)}dialog h2{font:italic bold 1.6rem Georgia;margin-bottom:10px}dialog p{margin-bottom:15px;line-height:1.55}dialog::backdrop{background:#020c1caa}
+</style>
+</head>
+<body>
+<canvas id="world" aria-label="Sunpetal Valley underwater scene"></canvas>
+<header class="glass"><h1>Sunpetal Valley</h1><span>MERMAID LIFE</span></header>
+<section class="quest glass" aria-label="Quest"><h2 id="questName"></h2><p id="questText" aria-live="polite"></p><small class="touch-help">Tap the water to swim.</small></section>
+<div class="location" id="location"></div>
+<div class="controls glass">WASD / arrows · Swim &nbsp; Shift · Burst &nbsp; E · Interact</div>
+<div class="actions"><button id="interact">Interact</button><button id="burst">Burst</button><button id="help" aria-label="Controls">?</button></div>
+<dialog id="guide" class="glass"><h2>Swimming &amp; farming</h2><p>Use WASD or the arrow keys to swim, or tap the water to set a destination. Hold Shift to burst. Press E or tap Interact beside a glowing marker.</p><form method="dialog"><button>Back to the reef</button></form></dialog>
+<script type="module" src="game.js"></script>
+</body></html>

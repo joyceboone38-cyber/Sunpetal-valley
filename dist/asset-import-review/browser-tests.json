@@ -1,0 +1,36 @@
+{
+  "desktop": "Keyboard movement, Luma introduction, travel to Moonlace, seed collection and return travel passed. Homebase art loads independently and reef-only props start loading on approach. Shared textures and meshes were requested once.",
+  "instances": {
+    "home coral": 7,
+    "home kelp": 4,
+    "home pebbles": 3,
+    "home berry": 2,
+    "home vine": 1,
+    "home flowerbasket": 1,
+    "home herbs": 1,
+    "reef coral": 7,
+    "reef kelp": 3,
+    "reef pebbles": 3,
+    "reef geode": 4,
+    "reef glowlog": 3,
+    "reef cave": 1,
+    "reef rockarch": 1,
+    "reef rocks": 3
+  },
+  "mobile": "390 \u00d7 844 touch emulation passed tap-to-swim, placing and moving the fountain at both original pads, and travel with imported props rendered.",
+  "injectedDownloadFailure": "Injected geode 404. Original reef accents remained visible while travel and other imported art still worked.",
+  "kitchenPlacement": {
+    "placement": {
+      "x": -18.2,
+      "z": 0.7,
+      "gap": 2.0718040896783183,
+      "asset": "Jewel Shell Kitchen"
+    },
+    "checks": [
+      "Go to kitchen reached the new approach",
+      "Cooking and packing worked",
+      "Crafting quest reached the original table and advanced"
+    ],
+    "faults": []
+  }
+}

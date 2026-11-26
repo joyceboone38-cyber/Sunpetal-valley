@@ -1,0 +1,54 @@
+{
+  "baseline": "e27fd4a",
+  "comparisonCamera": {
+    "x": -11.2,
+    "y": 3.6,
+    "z": 6.45,
+    "yaw": 0,
+    "pitch": 0,
+    "zoom": 1
+  },
+  "landingDimensions": {
+    "min": [
+      -13.642523495673826,
+      0.006000000000000005,
+      0.7023253027581058
+    ],
+    "max": [
+      -11.717476504326173,
+      0.2183621972712472,
+      2.097674697241894
+    ],
+    "surfaceY": 0.07156964004596408
+  },
+  "fountainPads": [
+    {
+      "name": "Cottage steps",
+      "x": -12.1,
+      "z": -0.45
+    },
+    {
+      "name": "Garden overlook",
+      "x": -10.15,
+      "z": 6.55
+    }
+  ],
+  "desktop": {
+    "fitted": {
+      "mesh": true,
+      "children": 1,
+      "padClearance": 0.40232530275810574,
+      "tap": [
+        379.24161442505044,
+        332.84374813120104
+      ]
+    },
+    "walk": "passed",
+    "fountainPlacements": "passed",
+    "reefTravel": "passed"
+  },
+  "missingAssetFallback": {
+    "fallbackPavers": 9,
+    "mobileSized": true
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "desktop": "Keyboard movement, real Luma story interaction, reef seed, and return travel passed.",
+  "scale": [
+    {
+      "outfit": "Blossom-Fairy",
+      "animation": "Idle",
+      "height": 1.2725525545106349,
+      "eyeLine": 1.12,
+      "hover": 0.17846626314090913
+    },
+    {
+      "outfit": "Tideglass-Witch",
+      "animation": "Idle",
+      "height": 1.3481824797531354,
+      "eyeLine": 1.12,
+      "hover": 0.14913672106136458
+    },
+    {
+      "outfit": "Starwing-Fairy",
+      "animation": "Idle",
+      "height": 1.2779907147720218,
+      "eyeLine": 1.12,
+      "hover": 0.142170204874005
+    },
+    {
+      "outfit": "Ponytail-Fashion-Avatar",
+      "animation": "Idle",
+      "height": 1.2816415042568052,
+      "eyeLine": 1.12,
+      "hover": 0.14096543314355747
+    }
+  ],
+  "wardrobe": "All four outfits appeared in the actual game and the in-world fitting camera opened.",
+  "cooking": "Both field crops were sown, tended, ripened and harvested. Cooking consumed the correct ingredients and activated the swim-speed bonus.",
+  "saves": "Landmark discoveries, pantry contents and story progress persisted after reload.",
+  "mobile": "390 \u00d7 844 touch emulation passed canvas taps, both fountain placements, travel, wardrobe layout and low-graphics switching. Physical iPhone Safari was unavailable.",
+  "gardenCountdown": "A mobile-sized browser test tracked the same Harvest control through the crop countdown and harvested three blossoms with a touch tap.",
+  "wardrobeMirror": {
+    "height": 1.94,
+    "baseElevation": 0.015,
+    "desktop": "Clicked the imported mirror from the gameplay camera. Avatar approached it, the Wardrobe opened, and View outfit produced a close view.",
+    "mobileEmulation": "Tapped Visit the mirror. Avatar approached, the Wardrobe opened, and the outfit camera rendered."
+  },
+  "cameraControls": {
+    "desktop": "Wheel in/out, drag rotation and tilt, reset, keyboard orbit and zoom, camera-relative swimming, ground picking after an orbit, and mirror interaction.",
+    "mobile": "One-finger orbit, pinch zoom, and tap-to-swim after rotating."
+  },
+  "mermaidLifeTransfer": {
+    "assets": "The Jewel Shell Kitchen, two shell garden planters, and jellyfish lantern appeared in WebGL at the existing Homebase stations.",
+    "desktop": "Pre-update saves load with an empty packed inventory. Cooking consumed the exact pantry ingredients. A packed Tideglow stew survived reload and could be eaten on Moonlace. Cooking on arrival at Homebase still applied its immediate boost.",
+    "mobile": "The Kitchen panel fit a 390 \u00d7 844 viewport and packing by touch passed."
+  }
+}

@@ -1,0 +1,178 @@
+[
+  {
+    "file": "environment/coral.glb",
+    "bytes": 293232,
+    "sha256": "543ac8e72c7f1627f131b93dd84c2c7a9897cf8edb16f837fd7a948e2752449f",
+    "triangles": 6956,
+    "animations": {},
+    "source": "https://grab3d.com/models/nature/coral-branch/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://grab3d.com/dl/coral-branch/LICENSE.txt",
+    "licenseCopy": "art-review/coral-branch-LICENSE.txt",
+    "originalSha256": "e15969fd118239dcd27e28ff4002414a0aa2c89df9d4368e08c1684fffe79e1d",
+    "embeddedTextureSize": 512,
+    "changes": "Geometry reduced and PBR textures resized. Placement and tint applied in the scene."
+  },
+  {
+    "file": "environment/shell.glb",
+    "bytes": 577980,
+    "sha256": "6302c3273e25239d6e3b67d2206e2e42e88cd3a529a112a561d3bef8acd440e6",
+    "triangles": 10680,
+    "animations": {},
+    "source": "https://grab3d.com/models/nature/seashell/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://grab3d.com/dl/seashell/LICENSE.txt",
+    "licenseCopy": "art-review/seashell-LICENSE.txt",
+    "originalSha256": "1b479890e5f0646103c437353674efcafb7eadbbdef881aee82f550aa268fb76",
+    "embeddedTextureSize": 512,
+    "changes": "Geometry reduced and PBR textures resized. Placement and tint applied in the scene."
+  },
+  {
+    "file": "environment/crystals.glb",
+    "bytes": 267432,
+    "sha256": "87d0df4cccd16279bd966f015a3cfc506e37cec3cd4c96964dc77b2eac080955",
+    "triangles": 6324,
+    "animations": {},
+    "source": "https://grab3d.com/models/nature/crystal-cluster/",
+    "license": "CC0-1.0",
+    "licenseUrl": "https://grab3d.com/dl/crystal-cluster/LICENSE.txt",
+    "licenseCopy": "art-review/crystal-cluster-LICENSE.txt",
+    "originalSha256": "04bfd9b3f3af9e7b60f07a932f12dd1916fbd4da57699768555f0bf89a8a4fb2",
+    "embeddedTextureSize": 512,
+    "changes": "Geometry reduced and PBR textures resized. Placement and tint applied in the scene."
+  },
+  {
+    "file": "environment/waterfall-cottage.glb",
+    "bytes": 5317532,
+    "sha256": "04fe71e13aadd3942da6473adfbc2377642b784816a154757c2b67ae8610361c",
+    "triangles": 162898,
+    "animations": {
+      "Waterfalls and Window Currents": 114
+    },
+    "source": "User-supplied New_Project_11202026 (5).glb and the existing Waterfalls and Window Currents animation",
+    "rights": "User-supplied project artwork",
+    "originalSha256": "2ee73ac7504f17729f4a7ae77ed7b38993e46f933e978924249db9fb50953e4e",
+    "originalAnimatedBytes": 18151824,
+    "changes": "Mesh and maps optimized. Ground level facade reshaped to fit player scale. Water motion and texture maps preserved."
+  },
+  {
+    "file": "characters/Blossom-Fairy.glb",
+    "bytes": 5202680,
+    "sha256": "7d1cd8754d21e883c28014105c4b830f1e49c5c3fa031009bc526c845975c409",
+    "triangles": 100000,
+    "animations": {
+      "Idle": 78,
+      "Run": 78,
+      "Walk": 78,
+      "Wave": 78,
+      "Wing Glide": 78,
+      "Wing Hover": 78
+    },
+    "source": "User-supplied character artwork and existing Sunpetal rigged GLB",
+    "rights": "User-supplied project artwork",
+    "changes": "Used as a playable outfit. Runtime motion adds gaits, channeled swimming, blinking and hair drift."
+  },
+  {
+    "file": "characters/Ponytail-Fashion-Avatar.glb",
+    "bytes": 4736016,
+    "sha256": "269cdd04d5a0da0eb1f4720a4bc7d9c0228e51a8887fbc1177e92ce7987f0073",
+    "triangles": 100000,
+    "animations": {
+      "Idle": 66,
+      "Run": 66,
+      "Walk": 66,
+      "Wave": 66
+    },
+    "source": "User-supplied character artwork and existing Sunpetal rigged GLB",
+    "rights": "User-supplied project artwork",
+    "changes": "Used as a playable outfit. Runtime motion adds gaits, channeled swimming, blinking and hair drift."
+  },
+  {
+    "file": "characters/Starwing-Fairy.glb",
+    "bytes": 2688668,
+    "sha256": "b1e68ec4ae4a2846bed902b489038cb23e742f3c3786eebf1babe599f6751050",
+    "triangles": 95000,
+    "animations": {
+      "Idle": 78,
+      "Run": 78,
+      "Walk": 78,
+      "Wave": 78,
+      "Wing Glide": 78,
+      "Wing Hover": 78
+    },
+    "source": "User-supplied character artwork and existing Sunpetal rigged GLB",
+    "rights": "User-supplied project artwork",
+    "changes": "Used as a playable outfit. Runtime motion adds gaits, channeled swimming, blinking and hair drift."
+  },
+  {
+    "file": "characters/Tideglass-Witch.glb",
+    "bytes": 2512776,
+    "sha256": "1e1477a8d0ae6e88d63892d5a5a6a28b45ef81a9e6dde4afea9dedad552cb345",
+    "triangles": 90000,
+    "animations": {
+      "Cast": 66,
+      "Idle": 66,
+      "Run": 66,
+      "Walk": 66,
+      "Wave": 66
+    },
+    "source": "User-supplied character artwork and existing Sunpetal rigged GLB",
+    "rights": "User-supplied project artwork",
+    "changes": "Used as a playable outfit. Runtime motion adds gaits, channeled swimming, blinking and hair drift."
+  },
+  {
+    "file": "environment/pearl-wardrobe.glb",
+    "bytes": 664284,
+    "sha256": "718c5ad1881efa75e2b4072f337aedd3f1112e92873babe4eb592f6309ed7f54",
+    "triangles": 53908,
+    "animations": {},
+    "source": "User-supplied New_Project_11212026 (4).glb",
+    "rights": "User-supplied project artwork",
+    "originalSha256": "0e0c51ff80930d2ae7150492240eca168043773c3bbd655e1b09d2c4877ad0bd",
+    "changes": "Embedded PBR maps and mesh optimized. Installed facing the court at 1.94 world units tall with a Wardrobe approach point."
+  },
+  {
+    "file": "environment/jewel-kitchen.glb",
+    "bytes": 668452,
+    "sha256": "6f3d0e132c699cce24a9bba285a5ec4332f787acbc83395e83d310790830b8a3",
+    "triangles": 30000,
+    "animations": {},
+    "source": "Sunpetal Valley \u2014 Mermaid Life, d5577aa, public/assets/environment/jewel-collection/jewel-kitchen.glb",
+    "rights": "User-created project artwork, authorized for use and modification",
+    "donorRuntimeSha256": "5294df2ad81d77af0ef0280f5e5969c16337730996ffcc43346ba277ba4668f9",
+    "changes": "Embedded maps and geometry optimized for browser transfer. Existing kitchen. Fitted at the home cooking station, with clearance at the recipe interaction point."
+  },
+  {
+    "file": "environment/shell-planter.glb",
+    "bytes": 188500,
+    "sha256": "cedfdf5736276cea2c58ac3ccb6cfa586dc04b8a42953fb160fe2c7f282a23a1",
+    "triangles": 6000,
+    "animations": {},
+    "source": "Sunpetal Valley \u2014 Mermaid Life, d5577aa, public/assets/environment/shell-planter/planter.glb",
+    "rights": "User-created project artwork, authorized for use and modification",
+    "donorRuntimeSha256": "4dfe9147bf5cfd2bd4db81e21e6630e6590aab11ab66c67ce5dbac5e0786ec06",
+    "changes": "Embedded maps and geometry optimized for browser transfer. Shared mesh for both existing garden beds. Scaled to the existing crop root height and plot footprint."
+  },
+  {
+    "file": "environment/jelly-lantern.glb",
+    "bytes": 155568,
+    "sha256": "a652d593037e0ce3b0fd3221f4e930490e79a43ed7c8ed0f880f2226eb9a8c9a",
+    "triangles": 5000,
+    "animations": {},
+    "source": "Sunpetal Valley \u2014 Mermaid Life, d5577aa, public/assets/environment/jewel-collection/jelly-lantern.glb",
+    "rights": "User-created project artwork, authorized for use and modification",
+    "donorRuntimeSha256": "06b5dc78c07cb284d37a3746c0df5595f6e70342ebeade257d0835df102441d2",
+    "changes": "Embedded maps and geometry optimized for browser transfer. Existing crafted-lantern story reward. Fitted off the plot edge to keep the path and bed clear."
+  },
+  {
+    "file": "environment/pearl-path-landing.glb",
+    "bytes": 668404,
+    "sha256": "5e1725571af8da1df36963ea6583fc97893d208ed39856478a7346f243001df8",
+    "triangles": 35998,
+    "animations": {},
+    "source": "User-supplied New Project 11_20_2026 v3 (1).glb",
+    "rights": "User-supplied project artwork",
+    "originalSha256": "49011ed2c794ef16ce9025ddc9202a4206f41a0c7746c33e43a1c7341d8e0a19",
+    "changes": "Optimized existing textured GLB. One flush landing replaces three paving rows when loaded."
+  }
+]

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07172d">
+<meta name="description" content="Explore Sunpetal Homebase, ride Luma's glowing current to Moonlace Reef, grow underwater blooms, and place a tideglass fountain.">
+<title>Sunpetal Valley · Mermaid Life</title>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<style>
+:root{color-scheme:dark;--ice:#a3eaff;--pearl:#fff3e3;--gold:#ffd79f;--glass:#0b2038e8}
+*{box-sizing:border-box}
+body{margin:0;background:#041324;color:var(--pearl);font:15px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid #8bdcf199;background:linear-gradient(135deg,#173a5c,#0b2746);border-radius:12px;padding:.67rem .94rem;box-shadow:0 4px 15px #02162965;transition:filter .18s,background .18s}
+button:hover:not(:disabled),button:focus-visible{background:#285777;outline:2px solid #a4eeff;outline-offset:2px}
+button:disabled{opacity:.52;cursor:not-allowed}
+button[aria-pressed=true]{border-color:#f4d29d;background:#533d69}
+#world{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#world.orbiting{cursor:grabbing}
+#startup{position:absolute;z-index:3;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(400px,calc(100% - 28px));padding:22px}
+#startup h1{margin-bottom:8px}
+#startup p{color:#d4eaff}
+#startup-recovery{margin-top:14px}
+#startup a{color:var(--ice);display:inline-block;margin:8px 8px 0 0}
+#illustrated-view{position:absolute;inset:0;z-index:4;background:#041324}
+#illustrated-view iframe{display:block;width:100%;height:100%;border:0}
+#illustrated-back{position:absolute;top:8px;left:50%;transform:translateX(-50%);padding:.4rem .75rem;white-space:nowrap}
+header,.quest,.controls,.actions,.location{position:absolute;z-index:1}
+.glass{background:linear-gradient(145deg,#07162cf3,#142544ee);border:1px solid #8cdcf768;box-shadow:0 8px 32px #02091775;backdrop-filter:blur(12px);border-radius:16px}
+header{top:18px;left:20px;padding:12px 18px;max-width:275px}
+h1,h2,p{margin:0}
+h1{font:italic bold clamp(1.26rem,3vw,1.95rem) Georgia,serif;color:#ffe0ed;letter-spacing:-.035em}
+header span{display:block;color:var(--ice);font-size:.72rem;letter-spacing:.22em;margin-top:1px}
+.progress-label{font-size:.76rem;color:#d9efff;letter-spacing:.04em;margin-top:10px}
+.progress-track{height:5px;background:#41607c88;border-radius:8px;margin-top:5px;overflow:hidden}
+#progressFill{display:block;width:0;height:100%;background:linear-gradient(90deg,#f3afdf,#e8bb87,#86edfa);border-radius:8px;transition:width .4s}
+#farm-access{display:block;width:100%;min-height:40px;margin-top:9px;padding:.37rem .65rem;border-color:#b2f0da;background:linear-gradient(135deg,#236a64,#1b4d5f);color:#ebfff5;font-size:.86rem;font-weight:700}
+#farm-access[hidden]{display:none}
+.quest{right:20px;top:18px;width:min(325px,37vw);padding:15px 17px}
+.eyebrow{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:#a7e9ff;margin:0 0 7px}
+.quest h2{font:700 1.25rem Georgia,serif;color:var(--gold);margin-bottom:6px}
+.quest p{color:#e6f4ff;line-height:1.43;font-size:.87rem}
+#fountainChoices{display:grid;gap:7px;margin-top:12px}
+#fountainChoices[hidden]{display:none}
+#fountainChoices button{text-align:left;font-size:.82rem;padding:.5rem .68rem}
+.location{left:50%;bottom:82px;transform:translateX(-50%);background:#061825e8;padding:7px 16px;border:1px solid #92ebf470;border-radius:30px;white-space:nowrap;font-size:.83rem;letter-spacing:.06em;color:#b2eeff;text-shadow:0 1px 5px #000a}
+.controls{bottom:20px;left:20px;padding:10px 14px;color:#d4eaff;font-size:.82rem}
+.controls span{display:block;margin-top:3px}
+.actions{bottom:18px;right:20px;display:flex;gap:8px;align-items:center}
+.actions #interact{background:linear-gradient(135deg,#8b487b,#532b67);border-color:#ffbfdf82}
+.actions #travel{border-color:#6acbddab}
+.actions #help{padding:.67rem .85rem}
+.touch-help{display:none}
+dialog{color:#ffe8ef;padding:24px;max-width:min(440px,92vw)}
+dialog h2{font:italic bold 1.6rem Georgia,serif;margin-bottom:10px}
+dialog p{margin-bottom:14px;line-height:1.55}
+dialog a{color:var(--ice)}
+dialog::backdrop{background:#020c1cce}
+.life-open{background:linear-gradient(135deg,#6e427b,#383867);border-color:#f8aee0aa}
+#life-panel{width:min(525px,calc(100vw - 24px));max-width:none;max-height:calc(100dvh - 28px);overflow:auto}
+.life-heading,.life-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.life-heading h2{margin:0}.life-heading button{padding:.42rem .78rem}
+#life-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:16px 0}
+@media(max-width:440px){#life-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#life-tabs button{min-height:44px;padding:.46rem .3rem;font-size:.85rem}
+#life-content{display:grid;gap:8px}
+.life-summary,#life-note{margin:0;color:#b9d7eb;font-size:.9rem}
+#life-note:empty{display:none}
+#life-note{margin-top:11px;color:#ffd79f}
+.life-row{min-height:62px;background:#29426970;border:1px solid #87a9dd38;border-radius:12px;padding:9px 11px}
+.life-row strong,.life-row small{display:block}
+.life-row small{color:#bfdbec;margin-top:2px}
+.life-row button,.life-route{min-height:44px;padding:.48rem .74rem}
+.life-row-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px}
+.life-route{justify-self:start}
+.outfit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.outfit-card{display:grid;align-content:start;gap:6px;font-size:.82rem;padding:5px;line-height:1.2}
+.outfit-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:7px}
+.farm-crop-title{margin:.35rem 0 0;color:var(--gold);font:700 1rem Georgia,serif}
+.farm-bed-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+@media(max-width:440px){.farm-bed-grid{grid-template-columns:1fr}}
+#area-action[hidden],body[data-space="farm"] .quest,body[data-space="cottage"] .quest{display:none}
+.quality-option{display:flex;gap:10px;align-items:center;margin:15px 0}
+.quality-option input{appearance:auto;width:1.25rem;height:1.25rem;accent-color:#e9a1cf}
+#life-feedback{position:absolute;z-index:2;left:50%;top:14%;transform:translateX(-50%);background:#141b39ed;border:1px solid #f8b1db82;border-radius:24px;padding:8px 14px;color:#ffe4f4;text-align:center;max-width:88vw;pointer-events:none}
+body[data-cooking] :is(header,.location,.controls,.actions){visibility:hidden}
+@media(max-width:960px){.controls{display:none}.actions{flex-wrap:wrap;justify-content:flex-end;max-width:80vw}.location{bottom:99px}.quest{width:min(300px,41vw)}}
+@media(max-width:720px),(pointer:coarse){
+ header{top:10px;left:10px;padding:10px 12px;max-width:180px}
+ h1{font-size:1.33rem}
+ header span{font-size:.63rem}
+ .progress-label{font-size:.69rem;margin-top:7px}
+ .quest{top:12px;right:10px;width:min(248px,58vw);padding:11px 12px}
+ .quest h2{font-size:1.06rem}
+ .quest p{font-size:.78rem}
+ .eyebrow{font-size:.58rem;margin-bottom:3px}
+ #fountainChoices button{font-size:.72rem}
+ .actions{right:10px;bottom:10px;gap:5px;max-width:94vw}
+ .actions button{font-size:.75rem;padding:.6rem .65rem}
+ .location{bottom:100px;font-size:.72rem}
+ .touch-help{display:block;color:#c3eaff;font-size:.7rem;margin-top:6px}
+ #life-panel{padding:16px}
+ #life-feedback{top:auto;bottom:150px}
+}
+@media(max-width:420px){
+ header{max-width:145px}
+ h1{font-size:1.09rem}
+ .quest{width:54vw}
+ .quest h2{font-size:.96rem}
+ .quest p{font-size:.71rem}
+ .actions{max-width:96vw}
+ .actions button{font-size:.71rem}
+ .outfit-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:360px){.quest{width:52vw}}
+body[data-cooking] #life-feedback{top:auto;bottom:max(24px,env(safe-area-inset-bottom))}
+@media(prefers-reduced-motion:reduce){button,#progressFill{transition:none}}
+</style>
+</head>
+<body>
+<canvas id="world" aria-label="Playable Sunpetal Valley underwater world. Tap the water to swim."></canvas>
+<section id="startup" class="glass" aria-labelledby="startup-title">
+  <h1 id="startup-title">Sunpetal Valley</h1>
+  <p id="startup-message" role="status">Starting the 3D game…</p>
+  <div id="startup-recovery" hidden>
+    <button type="button" id="startup-retry">Retry 3D</button>
+    <a href="./illustrated.html" id="startup-illustrated">Play the illustrated reef</a>
+  </div>
+  <noscript><p>Enable JavaScript to play Sunpetal Valley.</p></noscript>
+</section>
+<div id="game-ui" hidden>
+<header class="glass">
+  <h1>Sunpetal Valley</h1>
+  <span>MERMAID LIFE</span>
+  <div class="progress-label" id="progressText" aria-live="polite">Story 1 / 13</div>
+  <div class="progress-track" role="progressbar" aria-label="Story progress" aria-valuemin="0" aria-valuemax="13"><span id="progressFill"></span></div>
+  <button type="button" id="farm-access">Farm Island</button>
+</header>
+<section class="quest glass" aria-label="Current quest">
+  <div class="eyebrow">Your next adventure</div>
+  <h2 id="questName">Meet Luma</h2>
+  <p id="questText" aria-live="polite"></p>
+  <div id="fountainChoices" hidden>
+    <button type="button" data-fountain-spot="0">Cottage steps</button>
+    <button type="button" data-fountain-spot="1">Garden overlook</button>
+  </div>
+<small class="touch-help">Tap to swim · Drag to rotate · Pinch to zoom</small>
+</section>
+<div class="location" id="location" aria-live="polite">Sunpetal Homebase</div>
+<div class="controls glass">WASD / arrows · Swim &nbsp; Shift · Burst &nbsp; E · Interact &nbsp; T · Travel<span>Wheel · Zoom &nbsp; Drag · Rotate &nbsp; 0 · Reset camera</span></div>
+<div class="actions">
+  <button type="button" id="area-action" hidden></button>
+  <button type="button" id="travel" disabled>Meet Luma to travel</button>
+  <button type="button" id="interact">Go to quest marker</button>
+  <button type="button" id="burst">Burst</button>
+  <button type="button" id="life-open" class="life-open">Life</button>
+  <button type="button" id="help" aria-label="Controls and help">?</button>
+</div>
+<div id="life-feedback" role="status" hidden></div>
+<dialog id="life-panel" class="glass" aria-labelledby="life-title">
+  <div class="life-heading"><h2 id="life-title">Sunpetal Life</h2><button type="button" id="life-close">Close</button></div>
+  <nav id="life-tabs" aria-label="Activities"></nav>
+  <div id="life-content"></div>
+  <p id="life-note" role="status"></p>
+</dialog>
+<dialog id="guide" class="glass">
+  <h2>Swimming &amp; farming</h2>
+  <p><strong>Move:</strong> WASD / arrow keys, or tap the water. Hold Shift or press Burst to swim faster.</p>
+  <p><strong>Camera</strong> Scroll the wheel or press + and − to zoom. Drag or use [ and ] to rotate. On touchscreens, drag to rotate and pinch to zoom. Press 0 to reset the view.</p>
+  <p><strong>Quest:</strong> Press E or tap Go to quest marker; your mermaid swims to the glowing marker and interacts automatically. Using the movement keys cancels auto-swim.</p>
+  <p><strong>Travel:</strong> After meeting Luma, press T or use Travel to shuttle between Sunpetal Homebase and Moonlace Reef. You can also swim across the channel yourself.</p>
+  <p><strong>Farm Island</strong> is west of Homebase. Swim past the lantern buoys or tap the Farm Island button to swim there automatically. Enter the cottage to cook or use the wardrobe mirror.</p>
+  <p>On Farm Island, tap a bed to swim to it and work it, or press <strong>E</strong> beside a bed. Plant a bed, then tap <strong>Ask Luma</strong> to have her tend it.</p>
+  <p><strong>Fountain:</strong> Finish the story, select Cottage steps or Garden overlook, and your mermaid will place the crafted fountain there. You can move it again later.</p>
+  <p>Open <strong>Life</strong> or press L to change your look, tend the gardens, cook, explore, and craft accessories.</p>
+  <label class="quality-option"><input type="checkbox" id="low-graphics"> Low graphics</label>
+  <p><a href="illustrated.html">Open the illustrated preview</a></p>
+  <form method="dialog"><button>Back to the reef</button></form>
+</dialog>
+</div>
+<section id="illustrated-view" aria-label="Illustrated reef" hidden>
+  <iframe id="illustrated-frame" title="Play the illustrated reef"></iframe>
+  <button type="button" id="illustrated-back">Back to 3D</button>
+</section>
+<!-- bundled-preview -->
+<script>
+(() => {
+  const startup=document.querySelector('#startup');
+  const game=document.querySelector('#game-ui');
+  const message=document.querySelector('#startup-message');
+  const recovery=document.querySelector('#startup-recovery');
+  const retry=document.querySelector('#startup-retry');
+  const illustratedView=document.querySelector('#illustrated-view');
+  const illustratedFrame=document.querySelector('#illustrated-frame');
+  const back=document.querySelector('#illustrated-back');
+  const loadGame=()=>window.sunpetalPreview?.game??import('./reef3d.js');
+  const loadIllustrated=frame=>{
+    if(window.sunpetalPreview)frame.srcdoc=window.sunpetalPreview.illustrated();
+    else frame.src='./illustrated.html';
+  };
+  let launchTimer,gameModule,attempt=0,openingIllustrated=false;
+
+  function showLoading(text){
+    game.hidden=true;
+    startup.hidden=false;
+    message.textContent=text;
+    recovery.hidden=true;
+  }
+  function showError(text){
+    clearTimeout(launchTimer);
+    showLoading(text);
+    recovery.hidden=false;
+  }
+
+  async function launch(safeMode=false){
+    clearTimeout(launchTimer);
+    const ticket=++attempt;
+    showLoading(safeMode?'Starting with simpler 3D graphics…':'Starting the 3D game…');
+    launchTimer=setTimeout(()=>{
+      attempt++;
+      gameModule?.stopReef();
+      showError('The 3D game took too long to start.');
+    },15000);
+    try {
+      const module=await loadGame();
+      if(ticket!==attempt)return;
+      gameModule=module;
+      module.startReef({safeMode});
+    } catch(error) {
+      if(ticket!==attempt)return;
+      console.error(error);
+      gameModule?.stopReef();
+      showError('The 3D game files could not start in this window.');
+    }
+  }
+
+  function openIllustrated(event){
+    event.preventDefault();
+    clearTimeout(launchTimer);
+    attempt++;
+    gameModule?.stopReef();
+    openingIllustrated=true;
+    showLoading('Opening the illustrated reef…');
+    loadIllustrated(illustratedFrame);
+    launchTimer=setTimeout(()=>{
+      openingIllustrated=false;
+      illustratedFrame.removeAttribute('srcdoc');
+      illustratedFrame.removeAttribute('src');
+      showError('The illustrated reef could not open in this window.');
+    },10000);
+  }
+
+  document.addEventListener('sunpetal-ready',()=>{
+    clearTimeout(launchTimer);
+    startup.hidden=true;
+    game.hidden=false;
+  });
+  document.addEventListener('sunpetal-startup-error',event=>showError(event.detail));
+  window.addEventListener('message',event=>{
+    if(!openingIllustrated||event.source!==illustratedFrame.contentWindow||event.data!=='sunpetal-illustrated-ready')return;
+    openingIllustrated=false;
+    clearTimeout(launchTimer);
+    illustratedView.hidden=false;
+    startup.hidden=true;
+    illustratedFrame.focus();
+  });
+  for(const link of document.querySelectorAll('a[href$="illustrated.html"]'))link.addEventListener('click',openIllustrated);
+  back.addEventListener('click',()=>{
+    illustratedView.hidden=true;
+    illustratedFrame.removeAttribute('srcdoc');
+    illustratedFrame.removeAttribute('src');
+    launch(true);
+  });
+  retry.addEventListener('click',()=>launch(true));
+  launch();
+})();
+</script>
+</body>
+</html>

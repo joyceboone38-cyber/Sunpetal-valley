@@ -1,0 +1,112 @@
+{
+  "suite": "Sunpetal Valley scene construction",
+  "timestamp": "2026-11-21T20:34:24.647Z",
+  "passed": 8,
+  "total": 8,
+  "outcomes": [
+    {
+      "test": "Both 3D areas have distinctive named geometry",
+      "status": "PASS",
+      "detail": "cottage, 200 Sunpetal and 320 Moonlace flower instances present"
+    },
+    {
+      "test": "Rendering geometry remains within draw-call budget",
+      "status": "PASS",
+      "detail": "1018 meshes; garden flowers use instancing"
+    },
+    {
+      "test": "Luma travel ribbons exist and channel is represented in scene",
+      "status": "PASS",
+      "detail": "three guiding luminous current lines"
+    },
+    {
+      "test": "Fountain starts hidden until crafted and placed",
+      "status": "PASS",
+      "detail": "not visible for new players"
+    },
+    {
+      "test": "Fountain renders at cottage steps site",
+      "status": "PASS",
+      "detail": "fountain world transform matches cottage pad"
+    },
+    {
+      "test": "Fountain renders at garden overlook site",
+      "status": "PASS",
+      "detail": "fountain world transform matches garden pad"
+    },
+    {
+      "test": "Camera follows player across both independent regions",
+      "status": "PASS",
+      "detail": "tracked Sunpetal and Moonlace without render-state errors"
+    },
+    {
+      "test": "Picking maps screen coordinates to navigable water plane",
+      "status": "PASS",
+      "detail": "3D raycasting yields finite world coordinates"
+    }
+  ],
+  "scene": {
+    "objects": 1126,
+    "meshes": 1018,
+    "lights": 7,
+    "regionDetails": {
+      "Sunpetal flower gardens and shells": {
+        "meshes": 39,
+        "instances": 200
+      },
+      "Moonlace pearl path and reef gardens": {
+        "meshes": 134,
+        "instances": 320
+      },
+      "Luma current guide ribbons": {
+        "meshes": 3,
+        "instances": 0
+      },
+      "Movable Tideglass Fountain": {
+        "meshes": 41,
+        "instances": 0
+      },
+      "Courtyard wardrobe, kitchen, and creature nook": {
+        "meshes": 28,
+        "instances": 0
+      },
+      "Glassfin Grotto": {
+        "meshes": 20,
+        "instances": 0
+      }
+    },
+    "imported": {},
+    "landmarks": [
+      "Sunpetal Cottage",
+      "Sunpetal flower gardens and shells",
+      "Moonlace pearl path and reef gardens",
+      "Luma current guide ribbons",
+      "Movable Tideglass Fountain"
+    ],
+    "placements": [
+      {
+        "name": "Cottage steps",
+        "x": -12.1,
+        "z": -0.45
+      },
+      {
+        "name": "Garden overlook",
+        "x": -10.15,
+        "z": 6.55
+      }
+    ],
+    "fountain": {
+      "visible": false,
+      "x": -10.15,
+      "z": 6.55
+    },
+    "camera": {
+      "x": -12.898824184219968,
+      "y": 8.499999987281024,
+      "z": 13.649793419963556,
+      "yaw": 0,
+      "pitch": 0,
+      "zoom": 1
+    }
+  }
+}

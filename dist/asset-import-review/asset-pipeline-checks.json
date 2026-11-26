@@ -1,0 +1,185 @@
+[
+  {
+    "catalogSlug": "coral-branch",
+    "file": "environment/coral.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 6956,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 7,
+      "reef": 7
+    },
+    "fitAndPlacement": "Replaces selected perimeter colonies without changing main paths.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "seaweed",
+    "file": "environment/grab3d/kelp.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 7032,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 4,
+      "reef": 3
+    },
+    "fitAndPlacement": "Replaces border blade groups at their own anchors. Sway is limited to leaf tips.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "glowing-mushroom-log",
+    "file": "environment/grab3d/glowlog.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 6279,
+    "meshPrimitives": 3,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "reef": 3
+    },
+    "fitAndPlacement": "Replaces round anemone accents off the reef path. Cap lighting remains subdued.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "geode",
+    "file": "environment/grab3d/geode.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 9556,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "reef": 4
+    },
+    "fitAndPlacement": "Low rose-violet split stones at existing crystal accents.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "pebble-scatter",
+    "file": "environment/grab3d/pebbles.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 7028,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 3,
+      "reef": 3
+    },
+    "fitAndPlacement": "Low ground detail at the edge of existing surfaces.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "rock-arch",
+    "file": "environment/grab3d/rockarch.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 9083,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "reef": 1
+    },
+    "fitAndPlacement": "Replaces the distant channel arch at its existing anchor.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "berry-bush",
+    "file": "environment/grab3d/berry.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 7517,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 2
+    },
+    "fitAndPlacement": "Decorative bush by garden edges. Existing farm crop and harvest rules remain.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "hanging-vine",
+    "file": "environment/grab3d/vine.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 6930,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 1
+    },
+    "fitAndPlacement": "Lower side balcony at the cottage, outside the entry.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "hanging-basket",
+    "file": "environment/grab3d/flowerbasket.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 7633,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 1
+    },
+    "fitAndPlacement": "Decorative hanging basket by the cottage side wing, clear of the doorway and wardrobe.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "cave-entrance",
+    "file": "environment/grab3d/cave.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 9075,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "reef": 1
+    },
+    "fitAndPlacement": "Backdrop silhouette beyond the walkable reef.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "rocky-outcrop",
+    "file": "environment/grab3d/rocks.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 9102,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "reef": 3
+    },
+    "fitAndPlacement": "Follows the original distant rock positions. Retains readable foreground paths.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  },
+  {
+    "catalogSlug": "herb-pot",
+    "file": "environment/grab3d/herbs.glb",
+    "cc0Verified": true,
+    "normalAttributes": true,
+    "embeddedTextures": true,
+    "triangles": 6297,
+    "meshPrimitives": 1,
+    "meshPartsWithBlendedSurface": 0,
+    "sceneBatchCount": {
+      "home": 1
+    },
+    "fitAndPlacement": "Low herb pot to the outside of the kitchen approach.",
+    "review": "Checked in matched gameplay views. Scale, orientation, palette, and nearby path or station reviewed."
+  }
+]

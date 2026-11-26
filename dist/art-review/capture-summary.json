@@ -1,0 +1,49 @@
+{
+  "baselineRevision": "3ca4a686711126fa13dd88b1d29ec47a7e35abed",
+  "pairedCameraMetadata": {
+    "home": {
+      "x": -11.798934397792944,
+      "y": 8.5,
+      "z": 14.251953600298041
+    },
+    "reef": {
+      "x": 13.49999998836488,
+      "y": 8.5,
+      "z": 13.100000000529791
+    }
+  },
+  "comparisonViewport": [
+    1360,
+    900
+  ],
+  "portraitViewport": [
+    390,
+    844
+  ],
+  "importsRendered": {
+    "Moonlace crystal beds": true,
+    "Coral fans": true,
+    "Courtyard shells": true,
+    "waterfall cottage": true
+  },
+  "outfitForComparison": {
+    "outfit": "Ponytail-Fashion-Avatar",
+    "animation": "Idle",
+    "height": 1.2816415042568052,
+    "eyeLine": 1.12,
+    "hover": 0.17415830475127375
+  },
+  "cottageEntranceClearanceUnitsApprox": 1.667,
+  "fountainPlacements": [
+    {
+      "name": "Cottage steps",
+      "x": -12.1,
+      "z": -0.45
+    },
+    {
+      "name": "Garden overlook",
+      "x": -10.15,
+      "z": 6.55
+    }
+  ]
+}

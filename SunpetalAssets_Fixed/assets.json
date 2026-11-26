@@ -1,0 +1,130 @@
+[
+  {
+    "file": "coral",
+    "area": "both",
+    "role": "reef clusters and homebase perimeter",
+    "tint": "#EC78B4",
+    "priority": 1,
+    "name": "Coral Branch"
+  },
+  {
+    "file": "kelp",
+    "area": "both",
+    "role": "underwater border vegetation",
+    "tint": "#58CFC0",
+    "priority": 1,
+    "name": "Kelp Seaweed"
+  },
+  {
+    "file": "glowlog",
+    "area": "reef",
+    "role": "moonlace and witch accent",
+    "tint": "#B68BE5",
+    "priority": 1,
+    "name": "Glowing Mushroom Log"
+  },
+  {
+    "file": "geode",
+    "area": "reef",
+    "role": "crystal clusters",
+    "tint": "#AD88DF",
+    "priority": 1,
+    "name": "Geode"
+  },
+  {
+    "file": "pebbles",
+    "area": "both",
+    "role": "small seabed detail patches",
+    "tint": "#C9BEEB",
+    "priority": 1,
+    "name": "Pebble Scatter"
+  },
+  {
+    "file": "rockarch",
+    "area": "reef",
+    "role": "landmark, only if walkable paths remain open",
+    "tint": "#C89ACD",
+    "priority": 1,
+    "name": "Natural Rock Arch"
+  },
+  {
+    "file": "berry",
+    "area": "homebase",
+    "role": "coralberry crop prototype",
+    "tint": "#E994C2",
+    "priority": 1,
+    "name": "Berry Bush"
+  },
+  {
+    "file": "vine",
+    "area": "homebase",
+    "role": "exterior decoration",
+    "tint": "#72CABB",
+    "priority": 2,
+    "name": "Hanging Vine"
+  },
+  {
+    "file": "flowerbasket",
+    "area": "homebase",
+    "role": "hanging decorative flower basket",
+    "tint": "#E7A3D3",
+    "priority": 2,
+    "name": "Hanging Flower Basket"
+  },
+  {
+    "file": "moss",
+    "area": "both",
+    "role": "seabed ground variation, transform to marine plant",
+    "tint": "#65BFB8",
+    "priority": 2,
+    "name": "Moss Patch"
+  },
+  {
+    "file": "cave",
+    "area": "reef",
+    "role": "distant cavern landmark",
+    "tint": "#BBA3D5",
+    "priority": 2,
+    "name": "Cave Entrance"
+  },
+  {
+    "file": "dune",
+    "area": "both",
+    "role": "subtle seabed topography",
+    "tint": "#E6CBE3",
+    "priority": 2,
+    "name": "Sand Dune"
+  },
+  {
+    "file": "rocks",
+    "area": "reef",
+    "role": "reef boundary details",
+    "tint": "#B7A6D4",
+    "priority": 2,
+    "name": "Rocky Outcrop"
+  },
+  {
+    "file": "strawberry",
+    "area": "homebase",
+    "role": "prototype farm crop requiring recolor",
+    "tint": "#EFB3D4",
+    "priority": 2,
+    "name": "Strawberry Plant"
+  },
+  {
+    "file": "herbs",
+    "area": "homebase",
+    "role": "kitchen and crafting plants",
+    "tint": "#76CAB9",
+    "priority": 2,
+    "name": "Herb Planter"
+  },
+  {
+    "file": "roses",
+    "area": "homebase",
+    "role": "magical courtyard garden",
+    "tint": "#F19AC9",
+    "priority": 2,
+    "name": "Rose Bush"
+  }
+]

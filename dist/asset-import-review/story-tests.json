@@ -1,0 +1,43 @@
+{
+  "suite": "Sunpetal Valley game logic",
+  "timestamp": "2026-11-21T20:34:24.181Z",
+  "passed": 7,
+  "total": 7,
+  "outcomes": [
+    {
+      "test": "Fresh save starts at Sunpetal Homebase and shows quest one",
+      "status": "PASS",
+      "detail": "home region and progress UI initialized"
+    },
+    {
+      "test": "WASD, arrow movement, burst and world bounds",
+      "status": "PASS",
+      "detail": "keyboard, burst, and bounds valid"
+    },
+    {
+      "test": "Go to quest auto-swims and interacts on arrival",
+      "status": "PASS",
+      "detail": "Luma quest advanced without extra click"
+    },
+    {
+      "test": "Intro ride arrives at reef and enables repeatable travel",
+      "status": "PASS",
+      "detail": "intro + reef-home-reef transfers"
+    },
+    {
+      "test": "Click-to-swim can be cancelled by movement keys",
+      "status": "PASS",
+      "detail": "pointer targeting cancels on manual input"
+    },
+    {
+      "test": "Fountain placements work at both named sites and persist after reload",
+      "status": "PASS",
+      "detail": "cottage -> garden -> persisted reload"
+    },
+    {
+      "test": "Complete story quest chain without teleporting or altering the source",
+      "status": "PASS",
+      "detail": "13 quest steps completed with real movement and three return transfers"
+    }
+  ]
+}
