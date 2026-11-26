@@ -11,6 +11,7 @@ import { buildMoonlacePearl } from './reef-keepsake.js';
 import { createStaticReefAssets, hasReefModel } from './reef-model-loader.js';
 import { createRegionalArt } from './reef-region-art.js';
 import { buildFarmIsland,buildCottageRoom } from './reef-homestead.js';
+import { createFurniture } from './reef-furniture.js'; // [sunpetal-shop]
 import { createJuice } from './reef-juice.js';
 import { createProps } from './reef-props.js';
 
@@ -1133,6 +1134,7 @@ export function createReef(canvas, places) {
     buoys.push(holder);
   }
   const cottageArea=buildCottageRoom(scene,places,materials,kitchen,wardrobe);
+  const furniture=createFurniture(cottageArea);
   halo(scene,places.cottageDoor.x,.18,places.cottageDoor.z,.55,haloMaterials.amber);
   const staticArt=typeof document==='undefined'?null:createStaticReefAssets();
   const environment=staticArt?loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,landing},places,renderer,staticArt.load):null;
@@ -1363,6 +1365,7 @@ export function createReef(canvas, places) {
     farmBedGlow.scale.setScalar(1+bedPulse*.22);
     props?.update(t);
     juice.update(dt,{reduce:reduceMotion,viewHeight:height,fov:camera.fov});
+    furniture.tick(dt);
     character.position.set(player.x,.28+Math.sin(t*3.4)*.06+(current?Math.sin(t*5)*.12+.24:0),player.z);
     character.rotation.y=player.heading;
     const swim=Math.min(1,Math.hypot(player.vx,player.vz)/6);
@@ -1497,6 +1500,7 @@ export function createReef(canvas, places) {
       if(kind==='harvest'||kind==='meal'||kind==='ask'||kind==='pearl'||kind==='charm')emoteLuma?.('excited');
     },
     equip:id=>avatar?.equip(id),
+    setFurniture:ids=>furniture.setOwned(ids),
     ready:Promise.all([environment?.ready,avatarReady])
   };
 }

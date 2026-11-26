@@ -15,6 +15,7 @@ const css=`
   background:radial-gradient(circle at 34% 28%,#fff,#ffd6f3 38%,#e444b8 100%);
   box-shadow:0 4px 12px #5a0a5a99,inset 0 -3px 6px #a8259f80;will-change:transform}
 #stick.live{border-color:#fff0a8}
+@media(orientation:portrait){body.has-stick .actions{max-width:calc(100vw - 150px)}}
 @media(max-height:480px){#stick{width:112px;height:112px}#stick .pearl{width:50px;height:50px;margin:-25px 0 0 -25px}}
 `;
 
@@ -22,6 +23,7 @@ export function createStick({doc=document,onStart=()=>{}}={}) {
   const forced=new URLSearchParams(globalThis.location?.search??'').get('stick');
   const touchy=forced==='1'||(forced!=='0'&&(globalThis.matchMedia?.('(pointer:coarse)').matches||globalThis.navigator?.maxTouchPoints>0));
   const state={x:0,z:0,active:false};
+  let base,thumb;
   const result={
     // x is right, z is toward the viewer, each from -1 to 1, like the arrow keys but smooth.
     vector:()=>state,
@@ -32,13 +34,14 @@ export function createStick({doc=document,onStart=()=>{}}={}) {
   const style=doc.createElement('style');
   style.textContent=css;
   doc.head.append(style);
-  const base=doc.createElement('div');
+  base=doc.createElement('div');
   base.id='stick';
   base.setAttribute('aria-label','Swim stick');
-  const thumb=doc.createElement('div');
+  thumb=doc.createElement('div');
   thumb.className='pearl';
   base.append(thumb);
   (doc.querySelector('#game-ui')??doc.body).append(base);
+  doc.body.classList.add('has-stick');
 
   let pointerId=null;
   const dead=.12;

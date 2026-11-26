@@ -1,6 +1,7 @@
 import { outfits } from './reef-avatar.js';
 import { reefPosterUrl } from './reef-model-loader.js';
 import { reefLayout } from './reef-layout.js';
+import { furnitureCatalog } from './reef-furniture.js'; // [sunpetal-shop]
 
 const makeButton=(label,action)=>{
   const button=document.createElement('button');
@@ -12,21 +13,25 @@ const makeButton=(label,action)=>{
 
 const storageKey='sunpetal-life-v1';
 const crops=[
-  {id:'moonlace',label:'Moonlace',name:'Moonlace blossoms',yield:3,seconds:9},
-  {id:'starkelp',label:'Starkelp',name:'Starkelp fronds',yield:2,seconds:12}
+  {id:'moonlace',label:'Moonlace',name:'Moonlace blossoms',yield:3,seconds:9,price:4},
+  {id:'starkelp',label:'Starkelp',name:'Starkelp fronds',yield:2,seconds:12,price:6}
 ];
 const recipes=[
-  {id:'moonlaceTea',name:'Moonlace tea',needs:{moonlace:2},duration:25},
-  {id:'tideglowStew',name:'Tideglow stew',needs:{moonlace:1,starkelp:1},duration:45}
+  {id:'moonlaceTea',name:'Moonlace tea',needs:{moonlace:2},duration:25,price:30},
+  {id:'tideglowStew',name:'Tideglow stew',needs:{moonlace:1,starkelp:1},duration:45,price:55}
 ];
-const tabs=['Wardrobe','Garden','Kitchen','Explore','Workshop'];
+const tabs=['Wardrobe','Garden','Shop','Kitchen','Explore','Workshop'];
+// Prices in shells. The first outfit is free, and any look you already wear stays yours.
+const outfitPrices={'Ponytail-Fashion-Avatar':0,'Blossom-Fairy':150,'Tideglass-Witch':300,'Starwing-Fairy':450};
+const shellCap=999999999;
 const destination=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const lumaSwimTime=(from,to)=>Math.max(680,Math.round(destination(from,to)*130)+290);
 
 export function loadLife() {
   const start={outfit:outfits[0].id,quality:matchMedia('(pointer:coarse)').matches?'low':'high',
     pantry:{moonlace:0,starkelp:0},packed:{moonlaceTea:0,tideglowStew:0},plots:reefLayout.fieldPlots.map(()=>null),discovered:[],meal:null,
-    style:{pearlFound:false,charmMade:false,charmEquipped:false}};
+    style:{pearlFound:false,charmMade:false,charmEquipped:false},
+    shells:0,owned:{outfits:[outfits[0].id],furniture:[]}};
   try{
     const saved=JSON.parse(localStorage.getItem(storageKey));
     if(saved&&typeof saved==='object'){
@@ -50,6 +55,18 @@ export function loadLife() {
       start.style.charmMade=saved.style?.charmMade===true;
       start.style.pearlFound=start.style.charmMade||saved.style?.pearlFound===true;
       start.style.charmEquipped=start.style.charmMade&&saved.style?.charmEquipped===true;
+      if(Number.isSafeInteger(saved.shells)&&saved.shells>=0) start.shells=Math.min(shellCap,saved.shells);
+      if(Array.isArray(saved.owned?.outfits)){
+        for(const id of saved.owned.outfits){
+          if(outfits.some(outfit=>outfit.id===id)&&!start.owned.outfits.includes(id)) start.owned.outfits.push(id);
+        }
+      }
+      if(Array.isArray(saved.owned?.furniture)){
+        for(const id of saved.owned.furniture){
+          if(furnitureCatalog.some(item=>item.id===id)&&!start.owned.furniture.includes(id)) start.owned.furniture.push(id);
+        }
+      }
+      if(!start.owned.outfits.includes(start.outfit)) start.owned.outfits.push(start.outfit);
     }
   }catch{}
   return start;
@@ -72,8 +89,16 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     {id:'grotto',name:'Glassfin Grotto',point:layout.grotto,hint:'Moonlace Reef'}
   ];
 
+  const pill=document.createElement('div');
+  pill.id='shells';
+  pill.className='shells';
+  pill.setAttribute('aria-label','Shells');
+  document.querySelector('.actions')?.insertBefore(pill,document.querySelector('#life-open'));
+  function refreshShells(){pill.textContent=state.shells.toLocaleString()+' shells';}
+  refreshShells();
   function store() {
     try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{}
+    refreshShells();
   }
   const near=point=>destination(player,point)<1.7;
 
@@ -141,7 +166,9 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     const grid=document.createElement('div');
     grid.className='outfit-grid';
     for(const outfit of outfits){
+      const owned=state.owned.outfits.includes(outfit.id);
       const button=makeButton('',async()=>{
+        if(!owned){show('Shop');return;}
         const ticket=++outfitRequest;
         const oldLabel=label.textContent;
         label.textContent='Putting on…';
@@ -159,13 +186,13 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
           note.textContent='That look could not load. Try choosing it again.';
         }
       });
-      button.setAttribute('aria-pressed',String(outfit.id===state.outfit));
-      button.className='outfit-card';
+      button.setAttribute('aria-pressed',String(owned&&outfit.id===state.outfit));
+      button.className='outfit-card'+(owned?'':' locked');
       const poster=document.createElement('img');
       poster.src=reefPosterUrl('./characters/'+outfit.id+'.webp');
       poster.alt='';
       const label=document.createElement('span');
-      label.textContent=outfit.name;
+      label.textContent=owned?outfit.name:outfit.name+' · '+(outfitPrices[outfit.id]??0)+' shells';
       button.append(poster,label);
       grid.append(button);
     }
@@ -503,7 +530,92 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     content.append(row);
   }
 
-  const draw={Wardrobe:wardrobe,Garden:garden,Kitchen:kitchen,Explore:explore,Workshop:workshop};
+  const sellable=()=>[
+    ...crops.map(crop=>({kind:'pantry',id:crop.id,label:crop.name,price:crop.price})),
+    ...recipes.map(recipe=>({kind:'packed',id:recipe.id,label:recipe.name,price:recipe.price}))
+  ].map(item=>({...item,count:state[item.kind][item.id]})).filter(item=>item.count>0);
+
+  function sell(item,count) {
+    const amount=Math.min(count,state[item.kind][item.id]);
+    if(amount<1)return;
+    state[item.kind][item.id]-=amount;
+    state.shells=Math.min(shellCap,state.shells+amount*item.price);
+    store();
+    note.textContent='Sold '+amount+' '+item.label.toLowerCase()+' for '+amount*item.price+' shells.';
+    report(note.textContent);
+    getView()?.celebrate?.('harvest');
+    update();
+  }
+  function buyOutfit(outfit) {
+    const price=outfitPrices[outfit.id]??0;
+    if(state.owned.outfits.includes(outfit.id)||state.shells<price)return;
+    state.shells-=price;
+    state.owned.outfits.push(outfit.id);
+    store();
+    note.textContent=outfit.name+' is yours. Put it on in your Wardrobe.';
+    report(outfit.name+' bought');
+    getView()?.celebrate?.('charm');
+    update();
+  }
+  function buyFurniture(item) {
+    if(state.owned.furniture.includes(item.id)||state.shells<item.price)return;
+    state.shells-=item.price;
+    state.owned.furniture.push(item.id);
+    store();
+    getView()?.setFurniture?.(state.owned.furniture);
+    note.textContent=item.name+' is in your cottage.';
+    report(item.name+' bought');
+    getView()?.celebrate?.('charm');
+    update();
+  }
+
+  function shop(){
+    infoLine('You have '+state.shells.toLocaleString()+' shells. Sell what you grow and cook, then spend them on new looks and cottage furniture.');
+    const title=text=>{
+      const heading=document.createElement('h3');
+      heading.className='farm-crop-title';
+      heading.textContent=text;
+      content.append(heading);
+    };
+    title('Sell');
+    const items=sellable();
+    if(!items.length)infoLine('Nothing to sell yet. Harvest crops on Farm Island or pack a dish in the kitchen.');
+    for(const item of items){
+      const row=give(item.label,item.count+' · '+item.price+' shells each');
+      const actions=document.createElement('div');
+      actions.className='life-row-actions';
+      actions.append(makeButton('Sell 1',()=>sell(item,1)));
+      if(item.count>1)actions.append(makeButton('Sell all',()=>sell(item,item.count)));
+      row.append(actions);
+      content.append(row);
+    }
+    title('Looks');
+    for(const outfit of outfits){
+      const price=outfitPrices[outfit.id]??0;
+      const owned=state.owned.outfits.includes(outfit.id);
+      const row=give(outfit.name,owned?'Yours · Wear it in the Wardrobe':price+' shells');
+      if(owned)row.append(makeButton('Wardrobe',()=>show('Wardrobe')));
+      else{
+        const buy=makeButton('Buy',()=>buyOutfit(outfit));
+        buy.disabled=state.shells<price;
+        row.append(buy);
+      }
+      content.append(row);
+    }
+    title('Cottage furniture');
+    for(const item of furnitureCatalog){
+      const owned=state.owned.furniture.includes(item.id);
+      const row=give(item.name,owned?'In your cottage':item.price+' shells · '+item.about);
+      if(!owned){
+        const buy=makeButton('Buy',()=>buyFurniture(item));
+        buy.disabled=state.shells<item.price;
+        row.append(buy);
+      }
+      content.append(row);
+    }
+  }
+
+  const draw={Wardrobe:wardrobe,Garden:garden,Shop:shop,Kitchen:kitchen,Explore:explore,Workshop:workshop};
   for(const tab of tabs){
     buttons.append(makeButton(tab,()=>{
       section=tab;
@@ -547,6 +659,8 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       const now=Date.now();
       return state.plots.map(plot=>!plot?0:!plot.readyAt||plot.readyAt>now?1:2);
     },
-    get speedBoost(){return state.meal?.until>Date.now()?1.13:1;}
+    get speedBoost(){return state.meal?.until>Date.now()?1.13:1;},
+    get shells(){return state.shells;},
+    get ownedFurniture(){return state.owned.furniture;}
   };
 }

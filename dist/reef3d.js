@@ -560,11 +560,13 @@ export function startReef({safeMode=false}={}) {
     return;
   }
   lifeState.quality=quality;
+  view.setFurniture?.(life.ownedFurniture);
   document.querySelector('#low-graphics').checked=quality==='low';
   if(openFarmOnStart){
     openFarmOnStart=false;
     changeSpace('farm',farmIsland.arrival,-Math.PI/2);
   }
+  if(new URLSearchParams(window.location.search).get('area')==='cottage')changeSpace('cottage',cottageRoom.arrival,Math.PI);
   bindCanvas(canvas);
   updateQuest();
   firstFrame=true;
