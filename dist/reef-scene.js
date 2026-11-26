@@ -4,6 +4,7 @@ import { buildOpalCottage } from './opal-cottage.js';
 import { buildLuma } from './luma.js';
 import { addReefLife } from './reef-life.js';
 import { makeReefMaterials, makeUnderwaterProbe } from './reef-surfaces.js';
+import { glam } from './reef-glam.js'; // [sunpetal-glam]
 import { buildHomeStations, buildGlassfin, growCoastalCover, loadEnvironmentArt } from './reef-landmarks.js';
 import { createAvatar } from './reef-avatar.js';
 import { buildMoonlacePearl } from './reef-keepsake.js';
@@ -52,11 +53,11 @@ export function createReef(canvas, places) {
   const renderer = places.rendererOverride ?? createReefRenderer(canvas,{quality,simpleGraphics:places.simpleGraphics});
   const scene = new T.Scene();
   const artFallbacks={coral:{home:[],reef:[]},kelp:{home:[],reef:[]},geodes:[],glowlogs:[],caves:[],arches:[],rocks:[]};
-  const nearWater=new T.Color('#1b4a6b'),deepWater=new T.Color('#252250');
+  const nearWater=new T.Color('#1b4a6b').lerp(new T.Color('#2b8fb8'),glam),deepWater=new T.Color('#252250').lerp(new T.Color('#4b2c86'),glam);
   scene.background=nearWater.clone();
   scene.fog=new T.Fog(nearWater,11,41);
   if(renderer.supportsHDR!==false) scene.environment=makeUnderwaterProbe();
-  scene.environmentIntensity=.80;
+  scene.environmentIntensity=.80+.2*glam;
   const materials=makeReefMaterials();
   const camera = new T.PerspectiveCamera(44,1,.1,115);
   const focus = new T.Vector3(-7,.7,2);
@@ -69,7 +70,7 @@ export function createReef(canvas, places) {
   const pink = glow('#ff80dc');
   const cyan = glow('#70edff');
   const rockMats = ['#354869','#464971','#405e74','#423a65','#315267'].map(materials.limestone);
-  const skylight=new T.HemisphereLight('#c4f4fb','#543a65',.69);
+  const skylight=new T.HemisphereLight(new T.Color('#c4f4fb').lerp(new T.Color('#ffdff6'),glam),new T.Color('#543a65').lerp(new T.Color('#8650b8'),glam),.69+.26*glam);
   scene.add(skylight);
   const sun = new T.DirectionalLight('#edf9ff',2.78);
   sun.position.set(-12.5,30,-4.5);
@@ -81,7 +82,7 @@ export function createReef(canvas, places) {
   sun.shadow.bias=-.00025;
   sun.shadow.intensity=.81;
   scene.add(sun);
-  const fill = new T.DirectionalLight('#c6a1ff',.67);
+  const fill = new T.DirectionalLight(new T.Color('#c6a1ff').lerp(new T.Color('#ff9fe3'),glam),.67+.5*glam);
   fill.position.set(12,6,6);
   scene.add(fill);
   const porchLight=new T.PointLight('#ffd1a5',15,9,2);
