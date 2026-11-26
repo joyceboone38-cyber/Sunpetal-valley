@@ -1351,7 +1351,7 @@ export function createReef(canvas, places) {
     }
     if(cooking&&inCottage&&!reduceMotion){
       const stove=places.kitchen;
-      const pot={x:stove.x-.10,y:.98,z:stove.z+.53};
+      const pot={x:stove.x+.10,y:1.0,z:stove.z+.10};
       if(!wasCooking){
         ['#ffd9f2','#b9ffe0','#fff0a6','#f4c6ff','#ffc2dd'].forEach((color,index)=>{
           juice.toss({x:player.x+(index-2)*.12,y:1.05,z:player.z},pot,color);
@@ -1412,7 +1412,7 @@ export function createReef(canvas, places) {
     if(cookingBlend>.002){
       const stove=places.kitchen;
       const narrow=Math.max(1,Math.min(1.48,(1.1/camera.aspect)**.53));
-      cookingAim.set(stove.x-.10,.94,stove.z+.53);
+      cookingAim.set(stove.x+.10,.94,stove.z+.10);
       cookingCamera.set(cookingAim.x+3.02*narrow,1.72+.20*(narrow-1),cookingAim.z+1.59*narrow);
       camera.position.lerp(cookingCamera,cookingBlend);
       aim.lerp(cookingAim,cookingBlend);

@@ -254,8 +254,8 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
     placeholder.add(asset);
     renderer.refreshShadows?.();
   }
-  attach('jewel shell kitchen','jewel-kitchen.glb',({scene:asset})=>{
-    fitProp(kitchen,asset,'Jewel Shell Kitchen',-Math.PI/2,[.94,.94,.94],-.025);
+  attach('pearl reef kitchen','pearl-reef-kitchen.glb',({scene:asset})=>{
+    fitProp(kitchen,asset,'Pearl Reef Kitchen',0,[2,2,2],-.025);
   });
   attach('shell garden planters','shell-planter.glb',({scene:asset})=>{
     // The soil surface lands at the same height as the existing crop roots.
