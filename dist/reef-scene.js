@@ -456,20 +456,27 @@ export function createReef(canvas, places) {
   const compostGeometry=new T.ShapeGeometry(bedInner);
   const planterStone=lightRipples(materials.nacre('#b591b7'),.18);
   const compost=lightRipples(soil,.045);
+  // [sunpetal-sand] soft pink sand plots with raised rows, in place of the hard stone planters
+  const sandMound=new T.ExtrudeGeometry(gardenOutline(3.0,2.0,.7),{
+    depth:.07,bevelEnabled:true,bevelThickness:.085,bevelSize:.15,bevelSegments:6,curveSegments:14
+  });
+  const sandMaterial=new T.MeshStandardMaterial({color:'#e9a9bf',roughness:.97,metalness:0,emissive:'#ff8fb8',emissiveIntensity:.05});
+  const furrowMaterial=new T.MeshStandardMaterial({color:'#cf7f9e',roughness:.98});
+  const furrowGeometry=new T.CapsuleGeometry(.05,2.1,4,8);
   function bed(x,z,parent=scene) {
     const bed=new T.Group();
     bed.position.set(x,0,z);
     parent.add(bed);
-    const planter=mesh(bed,planterGeometry,[planterStone,wood],0,.068,0);
-    planter.rotation.x=-Math.PI/2;
-    planter.receiveShadow=true;
-    const plot=mesh(bed,compostGeometry,compost,0,.247,0);
-    plot.rotation.x=-Math.PI/2;
-    plot.receiveShadow=true;
-    const trim=bedOuter.getPoints(12).map(point=>[point.x,.271,-point.y]);
-    tube(bed,gold,trim,.018,64);
-    for(let i=0;i<19;i++){
-      orb(bed,tileMats[i%5],(random()-.5)*2.48,.253,(random()-.5)*1.43,.025,.014,.017,0);
+    const mound=mesh(bed,sandMound,sandMaterial,0,.07,0);
+    mound.rotation.x=-Math.PI/2;
+    mound.receiveShadow=true;
+    for(const row of [-.75,-.02,.71]){
+      const furrow=mesh(bed,furrowGeometry,furrowMaterial,0,.236,row);
+      furrow.rotation.z=Math.PI/2;
+      furrow.receiveShadow=true;
+    }
+    for(let i=0;i<9;i++){
+      orb(bed,tileMats[i%5],(random()-.5)*2.5,.236,(random()-.5)*1.5,.03,.016,.02,0);
     }
     return bed;
   }

@@ -75,7 +75,7 @@ export function buildFarmIsland(scene,layout,materials,buildBed){
   const {wood,gold}=materials;
   const slate=materials.limestone('#495e82');
   const rim=materials.nacre('#b79ad0');
-  const paving=materials.limestone('#af879f');
+  const paving=materials.limestone('#dca7b8'); // [sunpetal-sand]
   const pale=materials.nacre('#e3cedc');
   const lilac=materials.nacre('#c78be5');
   const aqua=materials.nacre('#69cac0');

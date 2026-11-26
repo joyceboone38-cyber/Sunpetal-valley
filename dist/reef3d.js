@@ -1,6 +1,7 @@
 import { createReef } from './reef-scene.js';
 import { reefLayout } from './reef-layout.js';
 import { connectLife, loadLife } from './reef-activities.js';
+import { createStick } from './reef-touch.js'; // [sunpetal-stick]
 export { useEmbeddedReefAssets } from './reef-model-loader.js';
 
 let canvas = document.querySelector('#world');
@@ -60,6 +61,7 @@ const player = { x: -9, z: 7, vx: 0, vz: 0, heading: .9, space:'outdoor' };
 const cookingPoint={x:kitchen.x-.22,z:kitchen.z+1.02,space:'cottage'};
 const wardrobePoint={x:wardrobe.x+.18,z:wardrobe.z+1.08,space:'cottage'};
 const keys = new Set();
+const stick = createStick({onStart:()=>{target=pendingAction=pendingVisit=undefined;}}); // [sunpetal-stick]
 const directions = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift']);
 const distance = (a,b) => Math.hypot(a.x-b.x,a.z-b.z);
 const clamp = (value, low, high) => Math.max(low,Math.min(high,value));
@@ -69,7 +71,7 @@ let frameRequest,firstFrame,hasStarted=false;
 let openFarmOnStart=window.location&&new URLSearchParams(window.location.search).get('area')==='farm';
 const life=connectLife({
   state:lifeState,getView:()=>view,layout:reefLayout,player,
-  onOpen(){keys.clear();player.vx=player.vz=0;},
+  onOpen(){keys.clear();stick.reset();player.vx=player.vz=0;},
   canOpen:()=>!current&&!cooking&&!guide.open,
   canExploreMoonlace:()=>step>=2,
   travelTo:area=>{
@@ -293,6 +295,12 @@ function move(now, dt) {
   let x = Number(keys.has('d') || keys.has('arrowright')) - Number(keys.has('a') || keys.has('arrowleft'));
   let z = Number(keys.has('s') || keys.has('arrowdown')) - Number(keys.has('w') || keys.has('arrowup'));
   let pace = 1;
+  const pad = stick.vector();
+  if (pad.active && !cooking) {
+    target = pendingAction = pendingVisit = undefined;
+    x = pad.x;
+    z = pad.z;
+  }
   if (target) {
     x = target.x-player.x;
     z = target.z-player.z;
@@ -320,7 +328,7 @@ function move(now, dt) {
     [x,z]=[x*cos+z*sin,z*cos-x*sin];
   }
   const magnitude = Math.hypot(x,z) || 1;
-  const speed = (keys.has('shift') || now < boostUntil ? 11.2 : 6.6)*pace*life.speedBoost;
+  const speed = (keys.has('shift') || now < boostUntil ? 11.2 : 6.6)*pace*(pad.active?Math.min(1,Math.hypot(pad.x,pad.z)):1)*life.speedBoost;
   const response = 1-Math.exp(-dt*(distance(player,farm)<2.8 ? 15 : x || z ? 9 : 6));
   player.vx += (x/magnitude*speed-player.vx)*response;
   player.vz += (z/magnitude*speed-player.vz)*response;

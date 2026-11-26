@@ -140,6 +140,22 @@ html.glam #life-feedback{background:#4a1578ed;border-color:#ffb4ec99}
 html.glam #illustrated-view{background:#2a0f4d}
 html.glam .farm-crop-title{color:#ffe27a}
 html.glam a{color:#ffb8ec}
+/* [sunpetal-landscape] a slim layout when the phone is held sideways */
+@media(max-height:520px) and (orientation:landscape){
+ header{top:8px;left:8px;padding:6px 10px;max-width:none;width:max-content;display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+ h1{font-size:1rem;white-space:nowrap}
+ header span,.progress-track{display:none}
+ .progress-label{margin:0;font-size:.66rem;white-space:nowrap}
+ #farm-access{width:auto;display:inline-block;margin:0;min-height:30px;padding:.2rem .65rem;font-size:.72rem;white-space:nowrap}
+ .quest{top:8px;right:8px;width:min(240px,34vw);padding:7px 10px}
+ .quest .eyebrow,.touch-help{display:none}
+ .quest h2{font-size:.9rem;margin:0 0 2px}
+ .quest p{font-size:.7rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+ .actions{right:8px;bottom:8px;gap:4px;flex-wrap:nowrap;max-width:64vw}
+ .actions button{font-size:.7rem;padding:.3rem .6rem;min-height:34px;white-space:nowrap}
+ .location{top:8px;bottom:auto;font-size:.68rem;padding:3px 10px}
+ #life-feedback{top:58px;bottom:auto}
+}
 </style>
 </head>
 <body>
