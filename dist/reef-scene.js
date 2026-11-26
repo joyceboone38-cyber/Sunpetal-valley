@@ -1103,10 +1103,10 @@ export function createReef(canvas, places) {
   const reefLife=addReefLife(scene,haloTexture);
   const farmArea=buildFarmIsland(scene,places,materials,bed);
   const farmBedBoxes=places.fieldPlots.map(({x,z})=>new T.Box3(
-    new T.Vector3(x-1.48,.02,z-.95),new T.Vector3(x+1.48,.52,z+.95)
+    new T.Vector3(x-.78,-.1,z-.78),new T.Vector3(x+.78,.5,z+.78)
   ));
   const farmBedGlow=mesh(farmArea.group,new T.TubeGeometry(new T.CatmullRomCurve3(
-    gardenOutline(2.98,1.92,.27).getPoints(16).slice(0,-1).map(point=>new T.Vector3(point.x,0,point.y)),true
+    gardenOutline(1.62,1.62,.3).getPoints(16).slice(0,-1).map(point=>new T.Vector3(point.x,0,point.y)),true
   ),64,.017,6,true),new T.MeshBasicMaterial({color:'#a7ffeb',transparent:true,opacity:.82}));
   farmBedGlow.visible=false;
   shellLantern(farmArea.group,7.57,.48,.66);
@@ -1186,7 +1186,7 @@ export function createReef(canvas, places) {
     renderer.setQuality?.(quality);
     juice.setQuality(quality);
   }
-  function render({ player, quest, step, dt, time, display, current, cooking, reduceMotion, crops=[0,0],style={},lumaWork,farmBed=-1 }) {
+  function render({ player, quest, step, dt, time, display, current, cooking, reduceMotion, crops=[],style={},lumaWork,farmBed=-1 }) {
     effectsReduced=Boolean(reduceMotion);
     const width=canvas.clientWidth,height=canvas.clientHeight;
     if(width!==viewWidth||height!==viewHeight){
@@ -1214,12 +1214,12 @@ export function createReef(canvas, places) {
     lastSpace=space;
     if(!inCottage){
       farmArea.update(crops,reduceMotion);
-      farmArea.tick?.(dt);
-      farmBedBoxes.forEach((box,index)=>{box.max.y=crops[index]===2?1.10:crops[index]===1?.72:.52;});
+      farmArea.tick?.(dt,t);
+      farmBedBoxes.forEach((box,index)=>{box.max.y=(crops[index]?.s??0)>=2?.95:.5;});
     }
     const featuredBed=places.fieldPlots[farmBed];
     farmBedGlow.visible=Boolean(featuredBed);
-    if(featuredBed)farmBedGlow.position.set(featuredBed.x-places.farmIsland.x,.30,featuredBed.z-places.farmIsland.z);
+    if(featuredBed)farmBedGlow.position.set(featuredBed.x-places.farmIsland.x,.14,featuredBed.z-places.farmIsland.z);
     for(const [index,buoy] of buoys.entries())buoy.position.y=.44+Math.sin(t*1.9+index*.65)*.09;
     const area=player.x<-1?'home':'reef';
     if(!inCottage&&area!==lastArea){
@@ -1442,6 +1442,10 @@ export function createReef(canvas, places) {
     });
     return picked;
   }
+  function pickStall(x,y){
+    if(!farmArea.group.visible)return null;
+    return farmArea.farmstead.hit(screenRay(x,y).ray);
+  }
   function hitsWardrobe(x,y){
     return cottageArea.visible&&screenRay(x,y).intersectObject(wardrobe,true).length>0;
   }
@@ -1476,7 +1480,7 @@ export function createReef(canvas, places) {
     };
   }
   return {
-    render,pick,pickFarmBed,hitsWardrobe,hitsKitchen,hitsMoonlacePearl,inspect,setQuality,setFitting:value=>{fitting=value;},
+    render,pick,pickFarmBed,pickStall,hitsWardrobe,hitsKitchen,hitsMoonlacePearl,inspect,setQuality,setFitting:value=>{fitting=value;},
     rotateCamera,zoomCamera,resetCamera,cameraHeading:()=>yaw,
     prepareArea:area=>regionalArt?.ensure(area),
     dispose(){
@@ -1500,7 +1504,8 @@ export function createReef(canvas, places) {
       if(kind==='harvest'||kind==='meal'||kind==='ask'||kind==='pearl'||kind==='charm')emoteLuma?.('excited');
     },
     equip:id=>avatar?.equip(id),
-    setFurniture:ids=>furniture.setOwned(ids),
+    setFurniture:(items,selected)=>furniture.setLayout(items,selected),
+    pickFurniture:(x,y)=>cottageArea.visible?furniture.pick(screenRay(x,y).ray):'',
     ready:Promise.all([environment?.ready,avatarReady])
   };
 }

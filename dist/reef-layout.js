@@ -25,13 +25,19 @@ const onFarmIsland=({x,z})=>{
   return x>=left&&x<=right&&z>=back&&z<=front;
 };
 const cottageRoom = { x: -112, z: 0, arrival:{x:-112,z:2.45}, bounds:{left:-115.3,right:-108.7,back:-1.28,front:2.85} };
-const fieldPlots=Array.from({length:12},(_,index)=>{
-  const side=index%2===0?-1:1;
-  const number=Math.floor(index/2);
-  const x=farmIsland.x+side*(number%2===0?2.78:6.06);
-  const z=farmIsland.z-3.55+Math.floor(number/2)*3.32;
-  return {x,z,number:number+1,crop:side<0?'moonlace':'starkelp',approach:{x,z:z+1.12}};
+// Six columns by four rows of sand tiles, three on each side of the centre path.
+const fieldPlots=Array.from({length:24},(_,index)=>{
+  const col=index%6,row=Math.floor(index/6);
+  const x=farmIsland.x+(col<3?-1:1)*[1.8,3.4,5.0][col<3?2-col:col-3];
+  const z=farmIsland.z+[-2.3,-.7,.9,2.5][row];
+  return {x,z,number:index+1,approach:{x,z:z+.45}};
 });
+// Stalls line the back of Farm Island, facing the camera.
+const stalls={
+  seeds:{x:farmIsland.x-4.5,z:farmIsland.z-4.35,stand:{x:farmIsland.x-4.5,z:farmIsland.z-2.95},name:'Seed Stall'},
+  boutique:{x:farmIsland.x,z:farmIsland.z-4.25,stand:{x:farmIsland.x,z:farmIsland.z-2.95},name:'Pearl Boutique'},
+  sell:{x:farmIsland.x+4.5,z:farmIsland.z-4.35,stand:{x:farmIsland.x+4.5,z:farmIsland.z-2.95},name:'Sell Stall'}
+};
 const travelLandings = {
   home: { x: -8.9, z: 6.2 },
   reef: { x: 12, z: -1.5 }
@@ -42,6 +48,6 @@ const displaySpots = [
 ];
 
 export const reefLayout = {
-  farm, cottage, cottageLanding, cottageDoor, farmDock, farmIsland, outdoorBounds, onFarmIsland, cottageRoom, fieldPlots,
+  farm, cottage, cottageLanding, cottageDoor, farmDock, farmIsland, outdoorBounds, onFarmIsland, cottageRoom, fieldPlots, stalls,
   jelly, shelf, moonlacePearl, station, grotto, glass, secondBed, wardrobe, kitchen, nook, displaySpots, travelLandings
 };

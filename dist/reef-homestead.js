@@ -1,4 +1,6 @@
 import * as T from './vendor/three.module.min.js';
+import { createField } from './reef-field.js';
+import { createFarmstead } from './reef-farmstead.js';
 
 const pi=Math.PI;
 function mesh(parent,shape,material,x,y,z){
@@ -82,33 +84,14 @@ export function buildFarmIsland(scene,layout,materials,buildBed){
   raisedIsland(group,slate,17.1,12.8,.68,-.95,1.95).position.z=.95;
   raisedIsland(group,rim,16.8,12.5,.1,-.255,1.82).position.z=.95;
   raisedIsland(group,paving,16.51,12.24,.04,-.18,1.7).position.z=.95;
-  for(let i=0;i<17;i++){
-    block(group,pale,0,.043,-4.96+i*.66,1.83,.052,.59);
-  }
-  for(const z of [-1.86,1.46,4.72]){
-    for(const sign of [-1,1]){
-      block(group,pale,sign*4.61,.03,z,7.03,.048,.58);
-    }
-  }
   for(let i=0;i<8;i++){
     block(group,wood,7.37+i*.26,.048,1.46,.232,.1,1.53);
   }
-  const cropMaterials={
-    stem:materials.textile('#3b8f79'),leaf:materials.textile('#5ec99f'),petals:lilac,kelp:aqua
-  };
-  const beds=fieldPlots.map(plot=>{
-    const bed=buildBed(plot.x-farmIsland.x,plot.z-farmIsland.z,group);
-    const color=plot.crop==='moonlace'?lilac:aqua;
-    block(bed,color,-1.10,.425,.82,.37,.15,.09);
-    block(bed,gold,-1.10,.34,.82,.04,.15,.033);
-    const plants=new T.Group();
-    plants.position.y=.26;
-    bed.add(plants);
-    const blooms=cropInstances(plants,plot.crop,cropMaterials);
-    return {plants,blooms};
-  });
+  const field=createField(group,fieldPlots,farmIsland);
+  const farmstead=createFarmstead(group,layout);
   for(const x of [-7.6,-1.27,1.27,7.6]){
     for(const z of [-4.78,4.82]){
+      if(z<0&&Math.abs(x)<5)continue;
       disk(group,wood,x,.36,z,.073,.75);
       disk(group,gold,x,.74,z,.153,.065);
       mesh(group,new T.SphereGeometry(.119,12,10),new T.MeshStandardMaterial({
@@ -134,35 +117,10 @@ export function buildFarmIsland(scene,layout,materials,buildBed){
       }
     }
   }
-  const statuses=[],pops=[];
-  const baseHeight=status=>status===2?1:.48;
-  return {group,update(crops,reduceMotion){
-    beds.forEach(({plants,blooms},index)=>{
-      const status=crops[index]??0;
-      if(statuses[index]===status)return;
-      if(!reduceMotion&&statuses[index]!==undefined&&status>0)pops[index]=0;
-      statuses[index]=status;
-      plants.visible=status>0;
-      plants.scale.set(1,baseHeight(status),1);
-      blooms.visible=status===2;
-    });
-  },
-  // Springy pop whenever a bed changes stage: planted, sprouted, ready.
-  tick(dt){
-    beds.forEach(({plants},index)=>{
-      if(pops[index]===undefined)return;
-      pops[index]+=dt/.55;
-      const base=baseHeight(statuses[index]??0);
-      if(pops[index]>=1){
-        plants.scale.set(1,base,1);
-        pops[index]=undefined;
-        return;
-      }
-      const u=pops[index];
-      const spring=1+.34*(1-u)*Math.sin(u*Math.PI*3.2);
-      plants.scale.set(1/Math.sqrt(spring),base*spring,1/Math.sqrt(spring));
-    });
-  }};
+  return {group,farmstead,
+    update(tilesNow){field.update(tilesNow);},
+    tick(dt,time){field.tick(dt,time);}
+  };
 }
 
 export function buildCottageRoom(scene,layout,materials,kitchen,wardrobe){

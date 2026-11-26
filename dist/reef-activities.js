@@ -1,7 +1,8 @@
 import { outfits } from './reef-avatar.js';
 import { reefPosterUrl } from './reef-model-loader.js';
 import { reefLayout } from './reef-layout.js';
-import { furnitureCatalog } from './reef-furniture.js'; // [sunpetal-shop]
+import { furnitureCatalog, furnitureById, furnitureRadius, roomFloor } from './reef-furniture.js'; // [sunpetal-shop]
+import { crops, cropById, legMs, tileStage, tileProgress, describeTime } from './reef-crops.js';
 
 const makeButton=(label,action)=>{
   const button=document.createElement('button');
@@ -12,76 +13,131 @@ const makeButton=(label,action)=>{
 };
 
 const storageKey='sunpetal-life-v1';
-const crops=[
-  {id:'moonlace',label:'Moonlace',name:'Moonlace blossoms',yield:3,seconds:9,price:4},
-  {id:'starkelp',label:'Starkelp',name:'Starkelp fronds',yield:2,seconds:12,price:6}
-];
 const recipes=[
   {id:'moonlaceTea',name:'Moonlace tea',needs:{moonlace:2},duration:25,price:30},
   {id:'tideglowStew',name:'Tideglow stew',needs:{moonlace:1,starkelp:1},duration:45,price:55}
 ];
-const tabs=['Wardrobe','Garden','Shop','Kitchen','Explore','Workshop'];
+const tabs=['Wardrobe','Garden','Market','Boutique','Home','Kitchen','Explore','Workshop'];
 // Prices in shells. The first outfit is free, and any look you already wear stays yours.
-const outfitPrices={'Ponytail-Fashion-Avatar':0,'Blossom-Fairy':150,'Tideglass-Witch':300,'Starwing-Fairy':450};
+const outfitPrices={'Ponytail-Fashion-Avatar':0,'Blossom-Fairy':800,'Tideglass-Witch':1600,'Starwing-Fairy':2500};
 const shellCap=999999999;
+const starterShells=40;
+const starterSeeds={moonlace:6,starkelp:4};
+const maxHome=60;
+const dailyPerShelf=4;
+// Where the first five furniture pieces used to sit, so older saves keep their layout.
+const legacySpots={starfishRug:[1.75,.25],pearlLamp:[-3.0,.35],coralPlanter:[3.0,.3],shellSofa:[-2.85,1.35,1],glamVanity:[3.05,1.65,3]};
 const destination=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 const lumaSwimTime=(from,to)=>Math.max(680,Math.round(destination(from,to)*130)+290);
+const wholeNumber=value=>Number.isSafeInteger(value)&&value>=0;
+const snap=value=>Math.round(value*4)/4;
+const clampFloor=(x,z)=>({
+  x:Math.min(roomFloor.right,Math.max(roomFloor.left,snap(x))),
+  z:Math.min(roomFloor.front,Math.max(roomFloor.back,snap(z)))
+});
+let uidCounter=0;
+const newUid=()=>'f'+Date.now().toString(36)+(uidCounter++).toString(36);
+
+// The shelf changes every day at 8 am UTC, like Scrooge's store in Dreamlight Valley.
+const shelfDay=now=>Math.floor((now-8*3600e3)/864e5);
+export function dailyShelf(now=Date.now()) {
+  let seed=shelfDay(now)*2654435761>>>0;
+  const random=()=>{seed=(seed+0x6D2B79F5)>>>0;let t=seed;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};
+  const pool=furnitureCatalog.filter(item=>item.daily);
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(random()*(i+1));
+    [pool[i],pool[j]]=[pool[j],pool[i]];
+  }
+  return pool.slice(0,dailyPerShelf);
+}
+const msUntilNewShelf=now=>(shelfDay(now)+1)*864e5+8*3600e3-now;
+
+function validPlot(value) {
+  if(!value||typeof value!=='object'||'readyAt' in value)return null;
+  if(!value.crop)return {};
+  const crop=cropById[value.crop];
+  if(!crop||!Number.isInteger(value.watered)||value.watered<0||value.watered>crop.waters)return {};
+  if(!Number.isFinite(value.until)||value.until<0)return {};
+  const plot={crop:crop.id,watered:value.watered,until:value.until};
+  if(Number.isFinite(value.tendAt)&&value.tendAt>0){
+    plot.tendAt=value.tendAt;
+    plot.tendDone=value.tendDone===true;
+  }
+  return plot;
+}
 
 export function loadLife() {
   const start={outfit:outfits[0].id,quality:matchMedia('(pointer:coarse)').matches?'low':'high',
-    pantry:{moonlace:0,starkelp:0},packed:{moonlaceTea:0,tideglowStew:0},plots:reefLayout.fieldPlots.map(()=>null),discovered:[],meal:null,
+    pantry:Object.fromEntries(crops.map(crop=>[crop.id,0])),seeds:{...starterSeeds},seedPick:'',
+    packed:{moonlaceTea:0,tideglowStew:0},plots:reefLayout.fieldPlots.map(()=>null),discovered:[],meal:null,
     style:{pearlFound:false,charmMade:false,charmEquipped:false},
-    shells:0,owned:{outfits:[outfits[0].id],furniture:[]}};
+    shells:starterShells,owned:{outfits:[outfits[0].id]},home:[],stash:{}};
   try{
     const saved=JSON.parse(localStorage.getItem(storageKey));
     if(saved&&typeof saved==='object'){
       if(outfits.some(outfit=>outfit.id===saved.outfit)) start.outfit=saved.outfit;
       if(saved.quality==='low'||saved.quality==='high') start.quality=saved.quality;
       for(const {id} of crops){
-        if(Number.isSafeInteger(saved.pantry?.[id])&&saved.pantry[id]>=0) start.pantry[id]=saved.pantry[id];
+        if(wholeNumber(saved.pantry?.[id])) start.pantry[id]=saved.pantry[id];
       }
       for(const {id} of recipes){
-        if(Number.isSafeInteger(saved.packed?.[id])&&saved.packed[id]>=0) start.packed[id]=saved.packed[id];
+        if(wholeNumber(saved.packed?.[id])) start.packed[id]=saved.packed[id];
       }
-      start.plots=start.plots.map((_,index)=>{
-        const value=saved.plots?.[index];
-        if(!value||!Number.isFinite(value.readyAt)||value.readyAt<0)return null;
-        const plot={readyAt:value.readyAt};
-        if(Number.isFinite(value.tendAt)&&value.tendAt>0&&value.tendAt<value.readyAt)plot.tendAt=value.tendAt;
-        return plot;
-      });
+      // A save from before seeds existed keeps its shells and gets a few starter seeds.
+      if(saved.seeds&&typeof saved.seeds==='object'){
+        start.seeds={};
+        for(const {id} of crops){
+          if(wholeNumber(saved.seeds[id])&&saved.seeds[id]>0) start.seeds[id]=saved.seeds[id];
+        }
+      }
+      if(typeof saved.seedPick==='string'&&cropById[saved.seedPick]) start.seedPick=saved.seedPick;
+      start.plots=start.plots.map((_,index)=>validPlot(saved.plots?.[index]));
       if(Array.isArray(saved.discovered)) start.discovered=saved.discovered.filter(value=>typeof value==='string');
       if(typeof saved.meal?.name==='string'&&Number.isFinite(saved.meal.until)) start.meal=saved.meal;
       start.style.charmMade=saved.style?.charmMade===true;
       start.style.pearlFound=start.style.charmMade||saved.style?.pearlFound===true;
       start.style.charmEquipped=start.style.charmMade&&saved.style?.charmEquipped===true;
-      if(Number.isSafeInteger(saved.shells)&&saved.shells>=0) start.shells=Math.min(shellCap,saved.shells);
+      if(wholeNumber(saved.shells)) start.shells=Math.min(shellCap,saved.shells);
       if(Array.isArray(saved.owned?.outfits)){
         for(const id of saved.owned.outfits){
           if(outfits.some(outfit=>outfit.id===id)&&!start.owned.outfits.includes(id)) start.owned.outfits.push(id);
         }
       }
-      if(Array.isArray(saved.owned?.furniture)){
+      if(!start.owned.outfits.includes(start.outfit)) start.owned.outfits.push(start.outfit);
+      const seen=new Set();
+      if(Array.isArray(saved.home)){
+        for(const entry of saved.home){
+          if(start.home.length>=maxHome||!furnitureById[entry?.id]||typeof entry.uid!=='string'||entry.uid.length>40||seen.has(entry.uid))continue;
+          if(!Number.isFinite(entry.x)||!Number.isFinite(entry.z))continue;
+          seen.add(entry.uid);
+          start.home.push({uid:entry.uid,id:entry.id,...clampFloor(entry.x,entry.z),rot:Number.isInteger(entry.rot)?((entry.rot%4)+4)%4:0});
+        }
+      }else if(Array.isArray(saved.owned?.furniture)){
         for(const id of saved.owned.furniture){
-          if(furnitureCatalog.some(item=>item.id===id)&&!start.owned.furniture.includes(id)) start.owned.furniture.push(id);
+          const spot=legacySpots[id];
+          if(spot&&!start.home.some(item=>item.id===id)) start.home.push({uid:newUid(),id,x:spot[0],z:spot[1],rot:spot[2]??0});
         }
       }
-      if(!start.owned.outfits.includes(start.outfit)) start.owned.outfits.push(start.outfit);
+      if(saved.stash&&typeof saved.stash==='object'){
+        for(const {id} of furnitureCatalog){
+          if(wholeNumber(saved.stash[id])&&saved.stash[id]>0) start.stash[id]=Math.min(99,saved.stash[id]);
+        }
+      }
     }
   }catch{}
   return start;
 }
 
 export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,canExploreMoonlace,travelTo,
-  openFarm,goToKitchen,cookingPoint,startCooking,goToWardrobe,wardrobePoint}) {
+  openFarm,goToKitchen,cookingPoint,startCooking,goToWardrobe,wardrobePoint,startDecorating}) {
   const panel=document.querySelector('#life-panel');
   const content=panel.querySelector('#life-content');
   const buttons=panel.querySelector('#life-tabs');
   const note=document.querySelector('#life-note');
   const status=document.querySelector('#life-feedback');
   const lowGraphics=document.querySelector('#low-graphics');
-  let section='Wardrobe',outfitRequest=0,renderTime=0,noticeTimer;
-  let gardenRows=[],lumaButton;
+  let section='Wardrobe',outfitRequest=0,noticeTimer,selectedUid='';
+  let lumaButton;
   const landmarks=[
     {id:'shell',name:'Waterfall Shell Cottage',point:{x:-13.1,z:.21},hint:'Sunpetal Homebase'},
     {id:'pool',name:'Pearl Tidepool',point:{x:-7.5,z:1.65},hint:'Sunpetal Homebase'},
@@ -89,18 +145,32 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     {id:'grotto',name:'Glassfin Grotto',point:layout.grotto,hint:'Moonlace Reef'}
   ];
 
+  const actions=document.querySelector('.actions');
   const pill=document.createElement('div');
   pill.id='shells';
   pill.className='shells';
   pill.setAttribute('aria-label','Shells');
-  document.querySelector('.actions')?.insertBefore(pill,document.querySelector('#life-open'));
+  actions?.insertBefore(pill,document.querySelector('#life-open'));
+  const seedChip=makeButton('',()=>{
+    if(!currentSeed()){goToStall('seeds');return;}
+    cycleSeed();
+  });
+  seedChip.id='seed-chip';
+  seedChip.className='seedchip';
+  seedChip.hidden=true;
+  actions?.insertBefore(seedChip,pill);
   function refreshShells(){pill.textContent=state.shells.toLocaleString()+' shells';}
-  refreshShells();
+  function refreshSeedChip(){
+    const id=currentSeed();
+    seedChip.textContent=id?cropById[id].label+' seeds x'+state.seeds[id]:'No seeds';
+  }
   function store() {
     try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{}
     refreshShells();
+    refreshSeedChip();
   }
   const near=point=>destination(player,point)<1.7;
+  const farmAt=()=>player.space==='farm';
 
   function report(message) {
     status.textContent=message;
@@ -156,6 +226,15 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     content.append(p);
   }
 
+  function heading(text) {
+    const title=document.createElement('h3');
+    title.className='farm-crop-title';
+    title.textContent=text;
+    content.append(title);
+  }
+
+  const pantryLine=()=>'Pantry · '+(crops.filter(crop=>state.pantry[crop.id]>0).map(crop=>state.pantry[crop.id]+' '+crop.label.toLowerCase()).join(' · ')||'empty');
+
   function wardrobe(){
     infoLine('Choose a look for your playable character.');
     if(!atMirror()){
@@ -168,7 +247,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     for(const outfit of outfits){
       const owned=state.owned.outfits.includes(outfit.id);
       const button=makeButton('',async()=>{
-        if(!owned){show('Shop');return;}
+        if(!owned){show('Boutique');return;}
         const ticket=++outfitRequest;
         const oldLabel=label.textContent;
         label.textContent='Putting on…';
@@ -217,117 +296,199 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     content.append(inspect);
   }
 
-  const bedDistance=bed=>Math.min(destination(player,bed),destination(player,bed.approach));
-  const nearBed=index=>player.space==='farm'&&bedDistance(layout.fieldPlots[index])<1.7;
+  // ---- The field: dig, plant, water, wait, harvest ----
+  const reach=1.7,bulkReach=2.45,bulkMax=12;
+  const tileDistance=index=>destination(player,layout.fieldPlots[index]);
+  const stageOf=(index,now)=>tileStage(state.plots[index],now);
+  const pendingTend=(index,now)=>state.plots[index]?.tendAt>now;
 
-  function closestBed(){
-    if(player.space!=='farm')return -1;
-    let nearest=-1,range=1.7;
-    layout.fieldPlots.forEach((bed,index)=>{
-      const distance=bedDistance(bed);
+  function currentSeed() {
+    const picked=state.seedPick;
+    if(picked&&state.seeds[picked]>0)return picked;
+    const next=crops.find(crop=>state.seeds[crop.id]>0);
+    return next?next.id:'';
+  }
+  function cycleSeed() {
+    const owned=crops.filter(crop=>state.seeds[crop.id]>0);
+    if(!owned.length)return;
+    const at=owned.findIndex(crop=>crop.id===currentSeed());
+    state.seedPick=owned[(at+1)%owned.length].id;
+    store();
+    update();
+  }
+
+  function closestBed() {
+    if(!farmAt())return -1;
+    let nearest=-1,range=reach;
+    layout.fieldPlots.forEach((_,index)=>{
+      const distance=tileDistance(index);
       if(distance<range){nearest=index;range=distance;}
     });
     return nearest;
   }
 
-  function bedState(index,now){
+  function tilesLike(index,now) {
+    const stage=stageOf(index,now);
+    const list=[index];
+    const others=layout.fieldPlots.map((_,i)=>i).filter(i=>i!==index&&stageOf(i,now)===stage&&tileDistance(i)<bulkReach&&!pendingTend(i,now));
+    others.sort((a,b)=>tileDistance(a)-tileDistance(b));
+    return list.concat(others).slice(0,bulkMax);
+  }
+
+  function worldBedAction(index,now) {
+    if(index<0)return {label:'Move onto the sand',disabled:true};
+    const stage=stageOf(index,now);
+    const count=stage===0||stage===1||stage===4||(stage===2&&!pendingTend(index,now))?tilesLike(index,now).length:1;
+    const more=count>1?' '+count:'';
+    if(stage===0)return {label:'Dig'+more};
+    if(stage===1){
+      const seed=currentSeed();
+      if(!seed)return {label:'Get seeds'};
+      return {label:'Plant '+(count>1?Math.min(count,state.seeds[seed])+' ':'')+cropById[seed].label};
+    }
+    if(stage===2)return pendingTend(index,now)?{label:'Luma is on it',disabled:true}:{label:'Water'+more};
+    if(stage===3)return {label:'Growing · '+describeTime(state.plots[index].until-now),disabled:true};
+    return {label:'Harvest'+more};
+  }
+
+  function waterTile(index,at) {
     const plot=state.plots[index];
-    if(!plot)return {action:'plant',detail:'Empty garden bed',button:'Sow'};
-    if(!plot.readyAt)return {action:'tend',detail:'Sprouts ready to tend',button:'Tend'};
-    if(plot.tendAt>now)return {detail:'Waiting for Luma',button:'Queued'};
-    if(plot.readyAt>now)return {detail:'Growing · '+Math.ceil((plot.readyAt-now)/1000)+'s',button:'Growing'};
-    return {action:'harvest',detail:'Ready to harvest',button:'Harvest'};
+    const crop=cropById[plot.crop];
+    plot.watered++;
+    plot.until=at+legMs(crop);
   }
 
-  const bedCrop=index=>crops.find(crop=>crop.id===layout.fieldPlots[index].crop);
-
-  function worldBedAction(index,now){
-    if(index<0)return {label:'Tap a bed',disabled:true};
-    const plot=bedState(index,now);
-    const label=plot.action==='plant'?'Plant':plot.button;
-    return {label:plot.action?label+' '+bedCrop(index).label:plot.detail,disabled:!plot.action};
-  }
-
-  function visitBed(index){
-    const {approach}=layout.fieldPlots[index];
-    const showBed=()=>{
-      show('Garden');
-      gardenRows.find(row=>row.index===index)?.button.focus();
-    };
-    if(nearBed(index))showBed();
-    else{
-      panel.close();
-      walkTo(approach,showBed);
+  // Do the right thing for these tiles. Returns a short message, or '' if nothing happened.
+  function work(indexes,now) {
+    const stage=stageOf(indexes[0],now);
+    if(stage===0){
+      for(const i of indexes)state.plots[i]={};
+      return indexes.length===1?'Dug a hole.':'Dug '+indexes.length+' holes.';
     }
+    if(stage===1){
+      const id=currentSeed();
+      if(!id)return '';
+      let planted=0;
+      for(const i of indexes){
+        if(!(state.seeds[id]>0))break;
+        state.seeds[id]--;
+        state.plots[i]={crop:id,watered:0,until:0};
+        planted++;
+      }
+      if(state.seeds[id]<1)delete state.seeds[id];
+      return 'Planted '+planted+' '+cropById[id].label.toLowerCase()+'. Water '+(planted===1?'it':'them')+' to start growing.';
+    }
+    if(stage===2){
+      for(const i of indexes)waterTile(i,now);
+      return indexes.length===1?'Watered.':'Watered '+indexes.length+' tiles.';
+    }
+    if(stage===4){
+      const found={};
+      let critical=false;
+      for(const i of indexes){
+        const crop=cropById[state.plots[i].crop];
+        const lucky=Math.random()<.12;
+        critical=critical||lucky;
+        const amount=lucky?3:1;
+        state.pantry[crop.id]+=amount;
+        found[crop.label]=(found[crop.label]??0)+amount;
+        state.plots[i]={};
+      }
+      const text=Object.entries(found).map(([name,count])=>count+' '+name.toLowerCase()).join(', ');
+      return (critical?'Critical harvest! ':'Harvested ')+text+'.';
+    }
+    return '';
   }
 
-  function grow(index){
-    if(!nearBed(index))return;
+  function celebrateTile(index,stage,message) {
+    const id=state.plots[index]?.crop??currentSeed();
+    const kind=stage===4?'harvest':stage===2?'tend':'plant';
+    getView()?.celebrate?.(kind,{bed:index,color:id});
+    return message;
+  }
+
+  // The big action button: do the same job on every matching tile within reach.
+  function farmAction() {
+    if(!farmAt())return;
     const now=Date.now();
-    const {action,detail}=bedState(index,now);
-    const crop=bedCrop(index);
-    let message;
-    if(action==='plant'){
-      state.plots[index]={readyAt:0};
-      message=crop.name+' planted.';
-    }else if(action==='tend'){
-      state.plots[index].readyAt=now+crop.seconds*1000;
-      message=crop.name+' tended.';
-    }else if(action==='harvest'){
-      state.plots[index]=null;
-      state.pantry[crop.id]+=crop.yield;
-      message='Harvested '+crop.yield+' '+crop.name.toLowerCase()+'.';
-    }else{
-      if(!panel.open)report(detail);
-      return;
-    }
-    note.textContent=message;
+    const index=closestBed();
+    if(index<0)return;
+    const stage=stageOf(index,now);
+    if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds at the Seed Stall.');return;}
+    if(stage===3||(stage===2&&pendingTend(index,now)))return;
+    const targets=tilesLike(index,now);
+    const message=work(targets,now);
+    if(!message)return;
+    celebrateTile(index,stage,message);
     store();
-    getView()?.celebrate?.(action,{bed:index,color:crop.id});
-    if(!panel.open||action==='harvest')report(message);
+    report(message);
+    note.textContent=message;
     update();
   }
 
-  function useBed(index){
-    if(nearBed(index))grow(index);
-    else walkTo({...layout.fieldPlots[index].approach,farmBed:index},()=>grow(index));
+  function useBed(index) {
+    const now=Date.now();
+    const run=()=>{
+      if(!farmAt()||tileDistance(index)>=reach+.35)return;
+      const at=Date.now();
+      const stage=stageOf(index,at);
+      if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds at the Seed Stall.');return;}
+      if(stage===3){report('Growing · '+describeTime(state.plots[index].until-at));return;}
+      if(pendingTend(index,at)){report('Luma is on it.');return;}
+      const message=work([index],at);
+      if(!message)return;
+      celebrateTile(index,stage,message);
+      store();
+      report(message);
+      note.textContent=message;
+      update();
+    };
+    if(tileDistance(index)<reach)run();
+    else walkTo({...layout.fieldPlots[index].approach,farmBed:index},run);
+    return now;
   }
 
-  function lumaTending(now){
+  // Luma waters every thirsty tile, one after another.
+  function settle(now) {
+    let changed=false;
+    state.plots.forEach((plot,index)=>{
+      if(!plot?.tendAt||plot.tendDone||plot.tendAt>now)return;
+      if(tileStage(plot,plot.tendAt)===2)waterTile(index,plot.tendAt);
+      plot.tendDone=true;
+      changed=true;
+    });
+    return changed;
+  }
+
+  function lumaTending(now) {
     return state.plots.some(plot=>plot?.tendAt>now);
   }
 
-  function askLuma(){
+  function askLuma() {
     const now=Date.now();
-    if(player.space!=='farm'||lumaTending(now))return;
-    const beds=layout.fieldPlots.flatMap((point,index)=>{
-      const plot=state.plots[index];
-      return plot&&plot.readyAt===0?[{point,index,row:Math.floor(index/4)}]:[];
-    });
-    if(!beds.length){
-      const message=state.plots.some(Boolean)
-        ?'These beds are already tended. Plant another bed for Luma to help.'
-        :'Plant a bed first, then ask Luma to tend it.';
+    if(!farmAt()||lumaTending(now))return;
+    const thirsty=layout.fieldPlots.flatMap((point,index)=>stageOf(index,now)===2?[{point,index,row:Math.floor(index/6)}]:[]);
+    if(!thirsty.length){
+      const message=state.plots.some(Boolean)?'Nothing is thirsty right now.':'Plant something first, then ask Luma to water it.';
       note.textContent=message;
       report(message);
       return;
     }
-    beds.sort((a,b)=>a.row-b.row||(a.row%2?b.point.x-a.point.x:a.point.x-b.point.x));
+    thirsty.sort((a,b)=>a.row-b.row||(a.row%2?b.point.x-a.point.x:a.point.x-b.point.x));
     let from=layout.farmIsland.arrival,tendAt=now;
-    for(const {point,index} of beds){
+    for(const {point,index} of thirsty){
       tendAt+=lumaSwimTime(from,point);
-      const crop=crops.find(({id})=>id===point.crop);
-      state.plots[index]={tendAt,readyAt:tendAt+crop.seconds*750};
+      Object.assign(state.plots[index],{tendAt,tendDone:false});
       from=point;
     }
     store();
-    note.textContent='Luma is tending '+beds.length+(beds.length===1?' bed.':' beds.');
+    note.textContent='Luma is watering '+thirsty.length+(thirsty.length===1?' tile.':' tiles.');
     report(note.textContent);
     getView()?.celebrate?.('ask');
     update();
   }
 
-  function lumaWork(now){
+  function lumaWork(now) {
     let next,previous;
     layout.fieldPlots.forEach((point,index)=>{
       const tendAt=state.plots[index]?.tendAt;
@@ -345,12 +506,11 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       heading:Math.atan2(next.point.x-from.x,next.point.z-from.z),pulse:Math.max(0,(fraction-.68)/.32)};
   }
 
-  function garden(){
-    infoLine('Pantry · '+state.pantry.moonlace+' moonlace · '+state.pantry.starkelp+' starkelp');
-    gardenRows=[];
+  function garden() {
     lumaButton=undefined;
-    if(player.space!=='farm'){
-      infoLine('Sunpetal Farm Island has six beds for each crop. Grow them for your pantry and cottage kitchen.');
+    infoLine(pantryLine());
+    if(!farmAt()){
+      infoLine('Sunpetal Farm Island has a field of 24 sand tiles. Dig, plant, water and wait, then harvest and sell at the market.');
       const route=makeButton('Swim to Farm Island',()=>{
         panel.close();
         openFarm();
@@ -359,45 +519,28 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       content.append(route);
       return;
     }
-    infoLine(state.plots.filter(Boolean).length+' of '+layout.fieldPlots.length+' beds planted');
-    lumaButton=makeButton('Ask Luma to tend beds',askLuma);
+    const now=Date.now();
+    const counts=[0,0,0,0,0];
+    layout.fieldPlots.forEach((_,i)=>counts[stageOf(i,now)]++);
+    infoLine('Dug '+counts[1]+' · Thirsty '+counts[2]+' · Growing '+counts[3]+' · Ready '+counts[4]);
+    infoLine('Tap sand to dig, tap a hole to plant your chosen seed, water it, then harvest when it blooms. The big button works on every matching tile near you.');
+    lumaButton=makeButton(lumaTending(now)?'Luma is watering…':'Ask Luma to water',askLuma);
     lumaButton.className='life-route';
+    lumaButton.disabled=lumaTending(now);
     content.append(lumaButton);
+    heading('Your seeds');
+    const seed=currentSeed();
+    const owned=crops.filter(crop=>state.seeds[crop.id]>0);
+    if(!owned.length)infoLine('No seeds left. Buy more at the Seed Stall.');
+    for(const crop of owned){
+      const row=give(crop.label+' · '+state.seeds[crop.id],crop.id===seed?'Planting this one':'Tap Use to plant this one');
+      if(crop.id!==seed)row.append(makeButton('Use',()=>{state.seedPick=crop.id;store();update();}));
+      content.append(row);
+    }
+    heading('Crop guide');
     for(const crop of crops){
-      const title=document.createElement('h3');
-      title.className='farm-crop-title';
-      title.textContent=crop.name;
-      const grid=document.createElement('div');
-      grid.className='farm-bed-grid';
-      layout.fieldPlots.forEach(({crop:id,number},index)=>{
-        if(id!==crop.id)return;
-        const row=give('Bed '+number,'');
-        const button=makeButton('',()=>nearBed(index)?grow(index):visitBed(index));
-        row.append(button);
-        grid.append(row);
-        gardenRows.push({detail:row.querySelector('small'),button,index});
-      });
-      content.append(title,grid);
+      content.append(give(crop.label,describeTime(crop.seconds*1000)+' · '+crop.waters+(crop.waters>1?' waterings':' watering')+' · sells '+crop.price));
     }
-    refreshGardenRows(Date.now());
-  }
-
-  function refreshGardenRows(now){
-    if(lumaButton){
-      const busy=lumaTending(now);
-      lumaButton.disabled=busy;
-      const label=busy?'Luma is tending beds…':'Ask Luma to tend beds';
-      if(lumaButton.textContent!==label)lumaButton.textContent=label;
-    }
-    gardenRows.forEach(({detail,button,index})=>{
-      const plot=bedState(index,now);
-      const nearby=nearBed(index);
-      const label=nearby?plot.button:'Go to bed';
-      if(detail.textContent!==plot.detail) detail.textContent=plot.detail;
-      if(button.textContent!==label) button.textContent=label;
-      button.disabled=nearby&&!plot.action;
-    });
-    renderTime=now;
   }
 
   const canCook=recipe=>Object.entries(recipe.needs).every(([name,count])=>state.pantry[name]>=count);
@@ -438,7 +581,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   }
 
   function kitchen(){
-    infoLine('Pantry · '+state.pantry.moonlace+' moonlace · '+state.pantry.starkelp+' starkelp');
+    infoLine(pantryLine());
     for(const recipe of recipes){
       const packed=state.packed[recipe.id];
       if(!packed)continue;
@@ -530,12 +673,42 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     content.append(row);
   }
 
+  // ---- Stalls ----
+  const stallPoint=id=>layout.stalls[id].stand;
+  const atStall=(id,radius=2.7)=>farmAt()&&destination(player,stallPoint(id))<radius;
+  const tabFor={seeds:'Market',sell:'Market',boutique:'Boutique'};
+  function goToStall(id) {
+    const open=()=>show(tabFor[id]);
+    if(atStall(id)){open();return;}
+    const go=()=>{panel.close();walkTo(stallPoint(id),open);};
+    if(farmAt())go();
+    else{panel.close();openFarm();}
+  }
+  function stallRoute(id,label) {
+    const route=makeButton(label,()=>goToStall(id));
+    route.className='life-route';
+    content.append(route);
+  }
+
+  function buySeed(crop,count) {
+    const total=crop.seed*count;
+    if(state.shells<total)return;
+    state.shells-=total;
+    state.seeds[crop.id]=(state.seeds[crop.id]??0)+count;
+    if(!state.seedPick)state.seedPick=crop.id;
+    store();
+    note.textContent='Bought '+count+' '+crop.label.toLowerCase()+' seed'+(count>1?'s':'')+'.';
+    report(note.textContent);
+    update();
+  }
+
   const sellable=()=>[
     ...crops.map(crop=>({kind:'pantry',id:crop.id,label:crop.name,price:crop.price})),
     ...recipes.map(recipe=>({kind:'packed',id:recipe.id,label:recipe.name,price:recipe.price}))
   ].map(item=>({...item,count:state[item.kind][item.id]})).filter(item=>item.count>0);
 
   function sell(item,count) {
+    if(!atStall('sell'))return;
     const amount=Math.min(count,state[item.kind][item.id]);
     if(amount<1)return;
     state[item.kind][item.id]-=amount;
@@ -546,9 +719,50 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     getView()?.celebrate?.('harvest');
     update();
   }
+
+  function market() {
+    infoLine('You have '+state.shells.toLocaleString()+' shells. Seeds cost shells, and everything you grow sells for more.');
+    const seeds=atStall('seeds'),selling=atStall('sell');
+    heading('Seed Stall');
+    if(!seeds)stallRoute('seeds','Walk to the Seed Stall');
+    for(const crop of crops){
+      const row=give(crop.label+' seeds · '+crop.seed+' shells',
+        describeTime(crop.seconds*1000)+' · '+crop.waters+(crop.waters>1?' waterings':' watering')+' · sells '+crop.price+' · you have '+(state.seeds[crop.id]??0));
+      const group=document.createElement('div');
+      group.className='life-row-actions';
+      const one=makeButton('Buy 1',()=>buySeed(crop,1));
+      const five=makeButton('Buy 5',()=>buySeed(crop,5));
+      one.disabled=!seeds||state.shells<crop.seed;
+      five.disabled=!seeds||state.shells<crop.seed*5;
+      group.append(one,five);
+      row.append(group);
+      content.append(row);
+    }
+    heading('Sell Stall');
+    if(!selling)stallRoute('sell','Walk to the Sell Stall');
+    const items=sellable();
+    if(!items.length)infoLine('Nothing to sell yet. Harvest crops or pack a dish in the kitchen.');
+    for(const item of items){
+      const row=give(item.label,item.count+' · '+item.price+' shells each');
+      const group=document.createElement('div');
+      group.className='life-row-actions';
+      const one=makeButton('Sell 1',()=>sell(item,1));
+      one.disabled=!selling;
+      group.append(one);
+      if(item.count>1){
+        const all=makeButton('Sell all',()=>sell(item,item.count));
+        all.disabled=!selling;
+        group.append(all);
+      }
+      row.append(group);
+      content.append(row);
+    }
+  }
+
+  // ---- Pearl Boutique and your home ----
   function buyOutfit(outfit) {
     const price=outfitPrices[outfit.id]??0;
-    if(state.owned.outfits.includes(outfit.id)||state.shells<price)return;
+    if(!atStall('boutique')||state.owned.outfits.includes(outfit.id)||state.shells<price)return;
     state.shells-=price;
     state.owned.outfits.push(outfit.id);
     store();
@@ -557,65 +771,145 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     getView()?.celebrate?.('charm');
     update();
   }
+
+  // The free spot closest to the middle of the room where a new piece fits without overlapping.
+  function freeSpot(id) {
+    const radius=furnitureRadius(furnitureById[id]);
+    const spots=[];
+    for(let z=roomFloor.back;z<=roomFloor.front;z+=.5){
+      for(let x=roomFloor.left;x<=roomFloor.right;x+=.5)spots.push({x,z,d:Math.hypot(x,z-1.3)});
+    }
+    spots.sort((a,b)=>a.d-b.d);
+    return spots.find(spot=>state.home.every(item=>
+      Math.hypot(item.x-spot.x,item.z-spot.z)>(furnitureRadius(furnitureById[item.id])+radius)*.85+.1))??null;
+  }
+  function refreshHome() {
+    getView()?.setFurniture?.(state.home,selectedUid);
+  }
+
   function buyFurniture(item) {
-    if(state.owned.furniture.includes(item.id)||state.shells<item.price)return;
+    if(!atStall('boutique')||state.shells<item.price)return;
+    const count=state.home.length+Object.values(state.stash).reduce((a,b)=>a+b,0);
+    if(count>=maxHome){report('Your home is full.');return;}
     state.shells-=item.price;
-    state.owned.furniture.push(item.id);
+    const spot=freeSpot(item.id);
+    if(spot)state.home.push({uid:newUid(),id:item.id,x:spot.x,z:spot.z,rot:0});
+    else state.stash[item.id]=(state.stash[item.id]??0)+1;
     store();
-    getView()?.setFurniture?.(state.owned.furniture);
-    note.textContent=item.name+' is in your cottage.';
+    refreshHome();
+    note.textContent=item.name+(spot?' is in your cottage. Open Home to move it.':' is in your stash. Open Home to place it.');
     report(item.name+' bought');
     getView()?.celebrate?.('charm');
     update();
   }
 
-  function shop(){
-    infoLine('You have '+state.shells.toLocaleString()+' shells. Sell what you grow and cook, then spend them on new looks and cottage furniture.');
-    const title=text=>{
-      const heading=document.createElement('h3');
-      heading.className='farm-crop-title';
-      heading.textContent=text;
-      content.append(heading);
-    };
-    title('Sell');
-    const items=sellable();
-    if(!items.length)infoLine('Nothing to sell yet. Harvest crops on Farm Island or pack a dish in the kitchen.');
-    for(const item of items){
-      const row=give(item.label,item.count+' · '+item.price+' shells each');
-      const actions=document.createElement('div');
-      actions.className='life-row-actions';
-      actions.append(makeButton('Sell 1',()=>sell(item,1)));
-      if(item.count>1)actions.append(makeButton('Sell all',()=>sell(item,item.count)));
-      row.append(actions);
-      content.append(row);
-    }
-    title('Looks');
+  function priceRow(item,detail) {
+    const have=state.home.filter(piece=>piece.id===item.id).length+(state.stash[item.id]??0);
+    const row=give(item.name+(have?' · you have '+have:''),item.price.toLocaleString()+' shells · '+(detail??item.about));
+    const buy=makeButton('Buy',()=>buyFurniture(item));
+    buy.disabled=!atStall('boutique')||state.shells<item.price;
+    row.append(buy);
+    content.append(row);
+  }
+
+  function boutique() {
+    const now=Date.now();
+    infoLine('You have '+state.shells.toLocaleString()+' shells.');
+    if(!atStall('boutique'))stallRoute('boutique','Walk to the Pearl Boutique');
+    heading('Today’s shelf');
+    infoLine('New pieces arrive in '+describeTime(msUntilNewShelf(now))+'.');
+    for(const item of dailyShelf(now))priceRow(item);
+    heading('Always in stock');
+    for(const item of furnitureCatalog.filter(piece=>!piece.daily))priceRow(item);
+    heading('Looks');
     for(const outfit of outfits){
       const price=outfitPrices[outfit.id]??0;
       const owned=state.owned.outfits.includes(outfit.id);
-      const row=give(outfit.name,owned?'Yours · Wear it in the Wardrobe':price+' shells');
+      const row=give(outfit.name,owned?'Yours · Wear it in the Wardrobe':price.toLocaleString()+' shells');
       if(owned)row.append(makeButton('Wardrobe',()=>show('Wardrobe')));
       else{
         const buy=makeButton('Buy',()=>buyOutfit(outfit));
-        buy.disabled=state.shells<price;
-        row.append(buy);
-      }
-      content.append(row);
-    }
-    title('Cottage furniture');
-    for(const item of furnitureCatalog){
-      const owned=state.owned.furniture.includes(item.id);
-      const row=give(item.name,owned?'In your cottage':item.price+' shells · '+item.about);
-      if(!owned){
-        const buy=makeButton('Buy',()=>buyFurniture(item));
-        buy.disabled=state.shells<item.price;
+        buy.disabled=!atStall('boutique')||state.shells<price;
         row.append(buy);
       }
       content.append(row);
     }
   }
 
-  const draw={Wardrobe:wardrobe,Garden:garden,Shop:shop,Kitchen:kitchen,Explore:explore,Workshop:workshop};
+  function sellBack(id) {
+    const item=furnitureById[id];
+    if(!item||!(state.stash[id]>0))return;
+    state.stash[id]--;
+    if(!state.stash[id])delete state.stash[id];
+    const refund=Math.floor(item.price*.75);
+    state.shells=Math.min(shellCap,state.shells+refund);
+    store();
+    note.textContent='Sold '+item.name.toLowerCase()+' back for '+refund+' shells.';
+    report(note.textContent);
+    update();
+  }
+
+  function home() {
+    infoLine(state.home.length+' piece'+(state.home.length===1?'':'s')+' in your cottage. Furniture sells back for 75% of what you paid, once it is in your stash.');
+    const decorate=makeButton('Decorate cottage',()=>{panel.close();startDecorating?.('');});
+    decorate.className='life-route';
+    content.append(decorate);
+    const stashed=furnitureCatalog.filter(item=>state.stash[item.id]>0);
+    heading('Stash');
+    if(!stashed.length)infoLine('Nothing in your stash. Store a piece while decorating to see it here.');
+    for(const item of stashed){
+      const row=give(item.name+' · '+state.stash[item.id],'Place it anywhere in the cottage');
+      const group=document.createElement('div');
+      group.className='life-row-actions';
+      group.append(makeButton('Place',()=>{panel.close();startDecorating?.(item.id);}),
+        makeButton('Sell '+Math.floor(item.price*.75),()=>sellBack(item.id)));
+      row.append(group);
+      content.append(row);
+    }
+  }
+
+  // The furniture helpers below are used by the decorating mode in reef-decorate.js.
+  function placeItem(id,x,z) {
+    if(!(state.stash[id]>0)||state.home.length>=maxHome)return '';
+    const spot=clampFloor(x,z);
+    state.stash[id]--;
+    if(!state.stash[id])delete state.stash[id];
+    const uid=newUid();
+    state.home.push({uid,id,...spot,rot:0});
+    selectedUid=uid;
+    store();
+    refreshHome();
+    return uid;
+  }
+  function moveItem(uid,x,z) {
+    const item=state.home.find(piece=>piece.uid===uid);
+    if(!item)return;
+    Object.assign(item,clampFloor(x,z));
+    store();
+    refreshHome();
+  }
+  function rotateItem(uid) {
+    const item=state.home.find(piece=>piece.uid===uid);
+    if(!item)return;
+    item.rot=(item.rot+1)%4;
+    store();
+    refreshHome();
+  }
+  function storeItem(uid) {
+    const at=state.home.findIndex(piece=>piece.uid===uid);
+    if(at<0)return;
+    const [item]=state.home.splice(at,1);
+    state.stash[item.id]=(state.stash[item.id]??0)+1;
+    if(selectedUid===uid)selectedUid='';
+    store();
+    refreshHome();
+  }
+  function selectItem(uid) {
+    selectedUid=uid;
+    refreshHome();
+  }
+
+  const draw={Wardrobe:wardrobe,Garden:garden,Market:market,Boutique:boutique,Home:home,Kitchen:kitchen,Explore:explore,Workshop:workshop};
   for(const tab of tabs){
     buttons.append(makeButton(tab,()=>{
       section=tab;
@@ -631,7 +925,6 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     });
     content.replaceChildren();
     draw[section]();
-    renderTime=Date.now();
   }
 
   function tick(now){
@@ -642,9 +935,12 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
         report('Discovered '+landmark.name);
       }
     }
-    if(panel.open&&section==='Garden'&&now-renderTime>350&&state.plots.some(plot=>plot?.readyAt>0)) refreshGardenRows(now);
+    if(settle(now)){store();update();}
+    seedChip.hidden=!farmAt();
   }
 
+  refreshShells();
+  refreshSeedChip();
   lowGraphics.checked=state.quality==='low';
   lowGraphics.addEventListener('change',()=>{
     state.quality=lowGraphics.checked?'low':'high';
@@ -654,13 +950,17 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   document.querySelector('#life-open').addEventListener('click',()=>show());
   panel.querySelector('#life-close').addEventListener('click',()=>panel.close());
   return {
-    panel,show,tick,visitWardrobe,findPearl,closestBed,worldBedAction,useBed,lumaWork,lumaTending,askLuma,
+    panel,show,tick,visitWardrobe,findPearl,closestBed,worldBedAction,useBed,farmAction,lumaWork,lumaTending,askLuma,
+    goToStall,placeItem,moveItem,rotateItem,storeItem,selectItem,refreshHome,
     get crops(){
       const now=Date.now();
-      return state.plots.map(plot=>!plot?0:!plot.readyAt||plot.readyAt>now?1:2);
+      return state.plots.map(plot=>({s:tileStage(plot,now),c:plot?.crop??'',p:tileProgress(plot,now)}));
     },
     get speedBoost(){return state.meal?.until>Date.now()?1.13:1;},
     get shells(){return state.shells;},
-    get ownedFurniture(){return state.owned.furniture;}
+    get home(){return state.home;},
+    get stash(){return state.stash;},
+    get selected(){return selectedUid;},
+    stashCount:id=>state.stash[id]??0
   };
 }
