@@ -21,9 +21,6 @@ export const propSlots=[
   {file:'sea-urchin.glb',area:'reef',x:10.5,z:-5.6,height:.3},
   {file:'coral.glb',area:'reef',x:8.2,z:-3.6,height:1.0,sway:true},
   {file:'coral.glb',area:'reef',x:10.9,z:-6.2,height:.9,sway:true,rotY:2.4},
-  // Sunpetal Homebase, near the Pearl Tidepool
-  {file:'seaweed.glb',area:'reef',x:-6.2,z:2.9,height:.9,sway:true},
-  {file:'seaweed.glb',area:'reef',x:-8.8,z:.6,height:.8,sway:true,rotY:1.7},
   // Farm Island, near the dock end
   // Cottage kitchen, beside the stove
   {file:'bowl.glb',area:'cottage',x:-1.6,z:-2.0,height:.25},

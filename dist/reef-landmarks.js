@@ -44,7 +44,7 @@ export function buildHomeStations(scene,places,materials) {
   const base=(position,name)=>{
     const group=new T.Group();
     group.name=name;
-    group.position.set(position.x,.04,position.z);
+    group.position.set(position.x,.04+places.floorAt(position.x,position.z),position.z);
     region.add(group);
     return group;
   };
@@ -190,7 +190,7 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
       imported[key]=false;
     }));
   };
-  attach('seashell cottage','seashell-cottage.glb',({scene:asset})=>{
+  if(places.homeVisible)attach('seashell cottage','seashell-cottage.glb',({scene:asset})=>{
     asset.name='Pastel Seashell Cottage';
     const scale=6.4;
     asset.scale.setScalar(scale);
@@ -198,7 +198,7 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
     const bounds=new T.Box3().setFromObject(asset,true);
     const center=bounds.getCenter(new T.Vector3());
     if(bounds.isEmpty()) throw new Error('Invalid cottage bounds');
-    asset.position.set(places.cottage.x-center.x,.061-bounds.min.y,places.cottageDoor.z-.35-bounds.max.z);
+    asset.position.set(places.cottage.x-center.x,.061+places.floorAt(places.cottage.x,places.cottage.z)-bounds.min.y,places.cottageDoor.z-.35-bounds.max.z);
     asset.traverse(object=>{
       if(!object.isMesh||object.material.transparent) return;
       object.castShadow=true;
@@ -254,19 +254,6 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
     // The soil surface lands at the same height as the existing crop roots.
     for(const bed of beds) fitProp(bed,asset.clone(true),'Shell Garden Planter',-Math.PI/2,[1.44,.58,1.35],.014);
   });
-  attach('jellyfish lantern','jelly-lantern.glb',({scene:asset})=>{
-    fitProp(crafted,asset,'Jellyfish Lantern',-Math.PI/2,[.67,.67,.67],.014);
-  });
-  attach('pearl path landing','pearl-path-landing.glb',({scene:asset})=>{
-    asset.traverse(object=>{
-      if(!object.isMesh) return;
-      object.material.roughness=Math.max(.42,object.material.roughness);
-      object.material.metalness=Math.min(.42,object.material.metalness);
-      object.material.specularColor?.multiplyScalar(.56);
-      object.material.normalScale?.multiplyScalar(.73);
-    });
-    fitProp(landing,asset,'Pearl Path Landing',0,[1.91,.72,1.81],.006);
-  });
 
   function cluster(file,key,placements,tint){
     attach(key,file,({scene:source})=>{
@@ -301,9 +288,6 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
       });
     });
   }
-  cluster('shell.glb','Courtyard shells',{
-    home:[[-15.8,.033,-.65,2.3,.11]]
-  },'#f3c9e8');
   cluster('coral.glb','Coral fans',{
     reef:[[7.83,.03,-3.99,4.1,1.3],[10.85,.10,-6.03,5.4,-.28],[15.1,.04,2.2,3.7,.92],[18.13,.04,-3.47,3.5,-.40],[19.1,-.35,-5.3,4.55,.39]]
   },'#e6acee');
@@ -347,7 +331,6 @@ export function growCoastalCover(scene,clock) {
     );
   };
   const patches=[
-    {base:'#60cbad',beds:[[-17.7,-1.2,.78],[-15.7,-1.3,.90],[-9.1,4.04,.54],[-7.8,-1.8,.68],[-18.5,5.4,.72],[-14.2,7.45,.59]]},
     {base:'#5ccbdf',beds:[[8.7,-4.5,.80],[10.9,-5.41,.71],[15.1,-5.42,.64],[18.17,-3.70,.80],[17.6,1.21,.73],[11.8,2.48,.67]]}
   ];
   const dummy=new T.Object3D();

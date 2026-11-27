@@ -11,6 +11,7 @@ import { buildMoonlacePearl } from './reef-keepsake.js';
 import { createStaticReefAssets, hasReefModel } from './reef-model-loader.js';
 import { createRegionalArt } from './reef-region-art.js';
 import { buildFarmIsland,buildCottageRoom } from './reef-homestead.js';
+import { buildPlaza } from './reef-plaza.js';
 import { createFurniture } from './reef-furniture.js'; // [sunpetal-shop]
 import { createJuice } from './reef-juice.js';
 import { createProps } from './reef-props.js';
@@ -53,6 +54,12 @@ export function createReef(canvas, places) {
   let quality=places.quality??'high';
   const renderer = places.rendererOverride ?? createReefRenderer(canvas,{quality,simpleGraphics:places.simpleGraphics});
   const scene = new T.Scene();
+  // The old Homebase island and its scenery were replaced by the Underwater Plaza. That code
+  // still runs so Moonlace Reef keeps its exact random layout; what it builds for the old town
+  // is dropped from the scene right away.
+  const dropOldTown=from=>{
+    for(const object of scene.children.slice(from))scene.remove(object);
+  };
   const artFallbacks={coral:{home:[],reef:[]},kelp:{home:[],reef:[]},geodes:[],glowlogs:[],caves:[],arches:[],rocks:[]};
   const nearWater=new T.Color('#1b4a6b').lerp(new T.Color('#2b8fb8'),glam),deepWater=new T.Color('#252250').lerp(new T.Color('#4b2c86'),glam);
   scene.background=nearWater.clone();
@@ -88,6 +95,7 @@ export function createReef(canvas, places) {
   scene.add(fill);
   const porchLight=new T.PointLight('#ffd1a5',15,9,2);
   porchLight.position.set(cottage.x+1.1,2.8,cottage.z+2.65);
+  porchLight.visible=Boolean(places.homeVisible);
   scene.add(porchLight);
   const grottoLight=new T.PointLight('#a49cfc',11.5,7,2);
   grottoLight.position.set(grotto.x+.50,1.9,grotto.z-.25);
@@ -246,7 +254,7 @@ export function createReef(canvas, places) {
         #include <colorspace_fragment>
       }`
   });
-  const seabed = mesh(scene,new T.PlaneGeometry(240,240),sea,0,-3.8,0);
+  const seabed = mesh(scene,new T.PlaneGeometry(240,240),sea,0,-4.8,0);
   seabed.rotation.x=-Math.PI/2;
 
   const lightShaftMaterial=new T.ShaderMaterial({
@@ -334,11 +342,14 @@ export function createReef(canvas, places) {
     // Preserve the random sequence used by the other scene assets.
     for(let i=0;i<288;i++) random();
   }
+  const oldIsland=scene.children.length;
   island(-12,1,8.5,7.2,'#b38c8d',.24);
+  dropOldTown(oldIsland);
   island(13,-2,7.3,6.0,'#3b3e65',1.16);
 
   const tileMats=['#d4b296','#e0b7b0','#ccaaa5','#e3bda1','#c3a3b7'].map(c=>lightRipples(materials.limestone(c),.32));
   const mortar=material('#59475c',{roughness:1});
+  const oldPaving=scene.children.length;
   const paving = new T.Group();
   scene.add(paving);
   const landing = new T.Group();
@@ -393,6 +404,7 @@ export function createReef(canvas, places) {
     });
     tube(scene,mosaicInlay,arc,.012,18).receiveShadow=true;
   }
+  dropOldTown(oldPaving);
 
   const haloSize=64;
   const haloPixels=new Uint8Array(haloSize*haloSize*4);
@@ -431,6 +443,7 @@ export function createReef(canvas, places) {
 
   const home = buildOpalCottage();
   home.position.set(cottage.x,.13,cottage.z);
+  home.visible=places.homeVisible;
   scene.add(home);
 
   function gardenOutline(width,depth,curve){
@@ -482,6 +495,8 @@ export function createReef(canvas, places) {
     return bed;
   }
   const beds=[bed(farm.x,farm.z),bed(secondBed.x,secondBed.z)];
+  for(const spot of beds)spot.position.y=places.floorAt(spot.position.x,spot.position.z);
+  const stationFrom=scene.children.length;
   box(scene,wood,station.x,.43,station.z,1.32,.78,.76);
   box(scene,materials.nacre('#d7a3cf'),station.x,.88,station.z,1.52,.13,.91);
   rod(scene,gold,[station.x-.64,.12,station.z+.4],[station.x+.64,.12,station.z+.4],.025);
@@ -491,10 +506,15 @@ export function createReef(canvas, places) {
     orb(scene,gold,station.x+offset,.48,station.z+.425,.037,.033,.022,1);
   }
   orb(scene,cyan,station.x-.32,.99,station.z,.12,.11,.12,1);
+  for(const part of scene.children.slice(stationFrom)){
+    part.position.y+=places.floorAt(station.x,station.z);
+    part.visible=places.homeVisible;
+  }
   const {region:homeStations,wardrobe,kitchen}=buildHomeStations(scene,places,materials);
-  for(const [x,z] of [[-10.7,5.7],[-15.4,-.1],[9,-.1],[15.8,-.6]]) lamp(scene,x,.05,z,x>0?cyan:amber);
+  for(const [x,z] of [[9,-.1],[15.8,-.6]]) lamp(scene,x,.05,z,cyan);
 
   // Pearl-pink flower beds and shell lanterns echo the illustrated homebase.
+  const oldDetails=scene.children.length;
   const sunpetalDetails = new T.Group();
   sunpetalDetails.name = 'Sunpetal flower gardens and shells';
   scene.add(sunpetalDetails);
@@ -613,6 +633,7 @@ export function createReef(canvas, places) {
   const crafted=new T.Group();
   crafted.position.set(-10.75,0,3.10);scene.add(crafted);
   lamp(crafted,0,0,0,pink);
+  dropOldTown(oldDetails);
 
   const floraMats=['#ac3e91','#df5fb8','#9246b7','#469ce3','#40bda8','#cb775f'].map(c=>material(c,{flatShading:true}));
   const coralMaterial=materials.coral;
@@ -882,7 +903,7 @@ export function createReef(canvas, places) {
     return geometry;
   }
   for(const [x,z] of [[-19,-2],[-7,-3],[6,-4],[17,1],[19,-4],[-19,4.65],[-6.96,7.52],[9,-6.2]]) {
-    const keep=z!==4.65&&x!==-6.96;
+    const keep=x>0;
     const cluster=new T.Group();
     cluster.position.set(x,-.06,z);
     if(keep)scene.add(cluster);
@@ -951,6 +972,7 @@ export function createReef(canvas, places) {
   scene.add(pearlPickup.shell);
   const pearlHit=new T.Sphere(new T.Vector3(moonlacePearl.x,.24,moonlacePearl.z),.39);
   const flowers=new T.Group();scene.add(flowers);
+  flowers.position.y=places.floorAt(farm.x,farm.z);
   const bloomPetals=new T.InstancedMesh(petalGeometry,petalMats[0],42);
   const bloomPearls=new T.InstancedMesh(petalGeometry,pearl,7);
   const blooms=[bloomPetals,bloomPearls];
@@ -986,7 +1008,7 @@ export function createReef(canvas, places) {
   }
 
   const kelp=new T.Group();
-  scene.add(kelp);kelp.position.set(secondBed.x,.27,secondBed.z);
+  scene.add(kelp);kelp.position.set(secondBed.x,.27+places.floorAt(secondBed.x,secondBed.z),secondBed.z);
   const tips=[];
   for(let i=0;i<8;i++){
     const x=-.94+(i%4)*.59,z=-.36+Math.floor(i/4)*.66;
@@ -1035,7 +1057,7 @@ export function createReef(canvas, places) {
   const ripple=mesh(fountain,new T.TorusGeometry(1,.013,6,32),glow('#52bedb'),0,.839,0);
   ripple.rotation.x=Math.PI/2;
   const pads=displaySpots.map(spot=>{
-    const pad=mesh(scene,new T.TorusGeometry(.77,.027,7,28),cyan,spot.x,.075,spot.z);
+    const pad=mesh(scene,new T.TorusGeometry(.77,.027,7,28),cyan,spot.x,.075+places.floorAt(spot.x,spot.z),spot.z);
     pad.rotation.x=Math.PI/2;
     return pad;
   });
@@ -1045,9 +1067,9 @@ export function createReef(canvas, places) {
   currentRibbon.name='Luma current guide ribbons';
   scene.add(currentRibbon);
   const currentLines = [
-    [[-4.1,-.45,3.1],[-1.3,-.35,2.4],[3,-.32,2.6],[6.9,-.37,1.6],[8.8,-.38,.35]],
-    [[-3.5,-.52,3.5],[.2,-.44,3.1],[3.9,-.45,3.2],[7.3,-.45,2.1],[9,-.4,1]],
-    [[-3.7,-.61,2.7],[.4,-.55,1.8],[4.2,-.53,1.5],[7.2,-.53,.5],[9.2,-.5,-.1]]
+    [[2.6,.2,3.1],[4,.05,2.7],[5.3,-.15,2.3],[6.9,-.37,1.6],[8.8,-.38,.35]],
+    [[2.9,.15,3.5],[4.3,-.05,3.2],[5.8,-.3,2.8],[7.3,-.45,2.1],[9,-.4,1]],
+    [[2.4,.1,2.7],[3.9,-.1,2.1],[5.3,-.3,1.5],[7.2,-.53,.5],[9.2,-.5,-.1]]
   ];
   const currentMat=new T.ShaderMaterial({
     uniforms:{time:waterTime,travelGlow:{value:0}},
@@ -1102,6 +1124,7 @@ export function createReef(canvas, places) {
   const motes=Array.from({length:24},()=>mesh(scene,new T.OctahedronGeometry(.055),cyan));
   const reefLife=addReefLife(scene,haloTexture);
   const farmArea=buildFarmIsland(scene,places,materials,bed);
+  const plaza=buildPlaza(scene);
   const farmBedBoxes=places.fieldPlots.map(({x,z})=>new T.Box3(
     new T.Vector3(x-.52,-.1,z-.52),new T.Vector3(x+.52,.6,z+.52)
   ));
@@ -1135,6 +1158,9 @@ export function createReef(canvas, places) {
   const furniture=createFurniture(cottageArea);
   halo(scene,places.cottageDoor.x,.18,places.cottageDoor.z,.55,haloMaterials.amber);
   const staticArt=typeof document==='undefined'?null:createStaticReefAssets();
+  // The old Homebase had its own coral and kelp scatter; the plaza brings its own.
+  artFallbacks.coral.home.length=0;
+  artFallbacks.kelp.home.length=0;
   const environment=staticArt?loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,landing},places,renderer,staticArt.load):null;
   const regionalArt=staticArt?createRegionalArt(scene,staticArt.load,waterTime,artFallbacks,renderer):null;
   let lastArea,lastSpace;
@@ -1159,7 +1185,7 @@ export function createReef(canvas, places) {
     });
   }
   let viewWidth=0,viewHeight=0;
-  let channelFraming=0;
+  let channelFraming=0,floorFollow=0;
   let lumaFollow=0;
   let fitting=false,fittingBlend=0,cookingBlend=0;
   const aim=new T.Vector3(),offset=new T.Vector3();
@@ -1190,7 +1216,9 @@ export function createReef(canvas, places) {
     if(width!==viewWidth||height!==viewHeight){
       viewWidth=width;viewHeight=height;
       renderer.resize(width,height);
-      farmArea.setViewHeight?.(Math.round(height*Math.min(window.devicePixelRatio||1,2)));
+      const pixelHeight=Math.round(height*Math.min(window.devicePixelRatio||1,2));
+      farmArea.setViewHeight?.(pixelHeight);
+      plaza.setViewHeight(pixelHeight);
       camera.aspect=width/Math.max(1,height);camera.updateProjectionMatrix();
     }
     const t=reduceMotion?0:time;
@@ -1214,6 +1242,7 @@ export function createReef(canvas, places) {
     if(!inCottage){
       farmArea.update(crops,reduceMotion);
       farmArea.tick?.(dt,t);
+      plaza.tick(t);
       farmBedBoxes.forEach((box,index)=>{box.max.y=(crops[index]?.s??0)>=2?.95:.5;});
     }
     const featuredBed=places.fieldPlots[farmBed];
@@ -1247,9 +1276,12 @@ export function createReef(canvas, places) {
     channelFraming+=(targetFraming-channelFraming)*smoothing*.65;
     focus.x+=(player.x+lookAhead-homeFraming*.9-focus.x)*smoothing;
     focus.z+=(player.z-1.8-homeFraming*1.65+player.vz*.18-channelFraming*1.65-focus.z)*smoothing;
+    // Swimmer and camera ride the plaza's floors, bridges and stairs.
+    const floorNow=space==='outdoor'?places.floorAt(player.x,player.z):0;
+    floorFollow+=(floorNow-floorFollow)*(1-Math.exp(-dt*(reduceMotion?16:6)));
     const tight=camera.aspect<.9?1.27:1;
-    camera.position.set(focus.x,(8.5-3.15*channelFraming)*tight,focus.z+(12.9-1.3*channelFraming)*tight);
-    aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21,focus.z);
+    camera.position.set(focus.x,(8.5-3.15*channelFraming)*tight+floorFollow,focus.z+(12.9-1.3*channelFraming)*tight);
+    aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21+floorFollow,focus.z);
     if(farmFraming>0){
       const position=places.farmIsland;
       const farmX=T.MathUtils.lerp(position.x-3.2,focus.x,camera.aspect<.9?.1:.2);
@@ -1276,18 +1308,15 @@ export function createReef(canvas, places) {
     const following=current&&!reduceMotion?.76:0;
     lumaFollow=reduceMotion?0:T.MathUtils.lerp(lumaFollow,following,smoothing*.60);
     currentMat.uniforms.travelGlow.value=reduceMotion?0:lumaFollow;
-    luma.position.set(
-      T.MathUtils.lerp(jelly.x,player.x+.83,lumaFollow),
-      1.55+Math.sin(t*1.83)*.175,
-      T.MathUtils.lerp(jelly.z,player.z-.72,lumaFollow)
-    );
+    const lumaX=T.MathUtils.lerp(jelly.x,player.x+.83,lumaFollow),lumaZ=T.MathUtils.lerp(jelly.z,player.z-.72,lumaFollow);
+    luma.position.set(lumaX,1.55+Math.sin(t*1.83)*.175+places.floorAt(lumaX,lumaZ),lumaZ);
     luma.rotation.y=Math.sin(t*.58)*.22;
     tendRing.visible=Boolean(tending&&tending.pulse>0);
     if(tending){
-      luma.position.set(tending.x,1.28+Math.sin(t*2)*.12,tending.z);
+      luma.position.set(tending.x,1.28+Math.sin(t*2)*.12+places.floorAt(tending.x,tending.z),tending.z);
       luma.rotation.y=tending.heading;
       if(tendRing.visible){
-        tendRing.position.set(tending.x,.31,tending.z);
+        tendRing.position.set(tending.x,.31+places.floorAt(tending.x,tending.z),tending.z);
         tendRing.scale.setScalar(.27+tending.pulse);
       }
     }
@@ -1297,7 +1326,7 @@ export function createReef(canvas, places) {
       blade.rotation.x=Math.sin(t*.71+phase)*.042;
     }
     marker.visible=Boolean(quest)&&!current;
-    if(quest) marker.position.set(quest.x,.23,quest.z);
+    if(quest) marker.position.set(quest.x,.23+places.floorAt(quest.x,quest.z),quest.z);
     star.position.y=1.0+Math.sin(t*3)*.13;star.rotation.y=t*1.6;
     seed.visible=step===2;seed.rotation.y=t;
     pearlPickup.shell.visible=!review&&step>=2&&!style.pearlFound;
@@ -1317,7 +1346,7 @@ export function createReef(canvas, places) {
       const spot=displaySpots[display];
       fountainPrism.rotation.y=t*.91;
       ripple.scale.setScalar(.14+(t*.47%1)*.52);
-      fountain.position.set(spot.x,0,spot.z);
+      fountain.position.set(spot.x,places.floorAt(spot.x,spot.z),spot.z);
       for(let i=0;i<droplets.length;i++){
         const angle=Math.floor(i/3)/5*tau;
         const phase=(t*.86+i%3/3)%1;
@@ -1335,7 +1364,8 @@ export function createReef(canvas, places) {
         mote.scale.setScalar(step===1||current?1:.52);
       }
     }
-    const inWater=space==='outdoor'&&(player.x<places.farmDock.x-1.9||player.x>-5&&player.x<7.4||Boolean(current));
+    const overPlaza=player.x>=places.farmDock.x-1.9&&player.x<4.5;
+    const inWater=space==='outdoor'&&(overPlaza?!places.onPlazaFloor(player.x,player.z):player.x<places.farmDock.x-1.9||player.x<7.4||Boolean(current))||Boolean(current);
     if(current||cooking||Math.hypot(player.vx,player.vz)>.34) fitting=false;
     fittingBlend+=((fitting?1:0)-fittingBlend)*(1-Math.exp(-dt*(reduceMotion?18:5.6)));
     if(avatar){
@@ -1368,7 +1398,7 @@ export function createReef(canvas, places) {
     props?.update(t);
     juice.update(dt,{reduce:reduceMotion,viewHeight:height,fov:camera.fov});
     furniture.tick(dt);
-    character.position.set(player.x,.28+Math.sin(t*3.4)*.06+(current?Math.sin(t*5)*.12+.24:0),player.z);
+    character.position.set(player.x,.28+floorFollow+Math.sin(t*3.4)*.06+(current?Math.sin(t*5)*.12+.24:0),player.z);
     character.rotation.y=player.heading;
     const swim=Math.min(1,Math.hypot(player.vx,player.vz)/6);
     body.rotation.x=-.12-swim*.38;
