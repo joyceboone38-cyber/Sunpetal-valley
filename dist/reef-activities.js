@@ -19,7 +19,7 @@ const recipes=[
 ];
 const tabs=['Wardrobe','Garden','Market','Boutique','Home','Kitchen','Explore','Workshop'];
 // Prices in shells. The first outfit is free, and any look you already wear stays yours.
-const outfitPrices={'Ponytail-Fashion-Avatar':0,'Blossom-Fairy':800,'Tideglass-Witch':1600,'Starwing-Fairy':2500};
+const outfitPrices={'Sea-Fairy':0};
 const shellCap=999999999;
 const starterShells=40;
 const starterSeeds={moonlace:6,starkelp:4};
@@ -297,7 +297,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   }
 
   // ---- The field: dig, plant, water, wait, harvest ----
-  const reach=1.7,bulkReach=2.45,bulkMax=12;
+  const reach=1.15,bulkReach=1.75,bulkMax=12;
   const tileDistance=index=>destination(player,layout.fieldPlots[index]);
   const stageOf=(index,now)=>tileStage(state.plots[index],now);
   const pendingTend=(index,now)=>state.plots[index]?.tendAt>now;
@@ -336,7 +336,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   }
 
   function worldBedAction(index,now) {
-    if(index<0)return {label:'Move onto the sand',disabled:true};
+    if(index<0)return {label:'Move onto the plots',disabled:true};
     const stage=stageOf(index,now);
     const count=stage===0||stage===1||stage===4||(stage===2&&!pendingTend(index,now))?tilesLike(index,now).length:1;
     const more=count>1?' '+count:'';
@@ -414,7 +414,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     const index=closestBed();
     if(index<0)return;
     const stage=stageOf(index,now);
-    if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds at the Seed Stall.');return;}
+    if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds in the Market tab.');return;}
     if(stage===3||(stage===2&&pendingTend(index,now)))return;
     const targets=tilesLike(index,now);
     const message=work(targets,now);
@@ -432,7 +432,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       if(!farmAt()||tileDistance(index)>=reach+.35)return;
       const at=Date.now();
       const stage=stageOf(index,at);
-      if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds at the Seed Stall.');return;}
+      if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds in the Market tab.');return;}
       if(stage===3){report('Growing · '+describeTime(state.plots[index].until-at));return;}
       if(pendingTend(index,at)){report('Luma is on it.');return;}
       const message=work([index],at);
@@ -510,7 +510,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     lumaButton=undefined;
     infoLine(pantryLine());
     if(!farmAt()){
-      infoLine('Sunpetal Farm Island has a field of 24 sand tiles. Dig, plant, water and wait, then harvest and sell at the market.');
+      infoLine('The Pearl Reef Sanctuary has 12 plots. Dig, plant, water and wait, then harvest and sell in the Market tab.');
       const route=makeButton('Swim to Farm Island',()=>{
         panel.close();
         openFarm();
@@ -531,7 +531,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     heading('Your seeds');
     const seed=currentSeed();
     const owned=crops.filter(crop=>state.seeds[crop.id]>0);
-    if(!owned.length)infoLine('No seeds left. Buy more at the Seed Stall.');
+    if(!owned.length)infoLine('No seeds left. Buy more in the Market tab.');
     for(const crop of owned){
       const row=give(crop.label+' · '+state.seeds[crop.id],crop.id===seed?'Planting this one':'Tap Use to plant this one');
       if(crop.id!==seed)row.append(makeButton('Use',()=>{state.seedPick=crop.id;store();update();}));
@@ -673,22 +673,14 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     content.append(row);
   }
 
-  // ---- Stalls ----
-  const stallPoint=id=>layout.stalls[id].stand;
-  const atStall=(id,radius=2.7)=>farmAt()&&destination(player,stallPoint(id))<radius;
+  // ---- Shops ----
+  // The Market and Boutique tabs are open from the Life menu anywhere. Stalls come later.
+  const atStall=()=>true;
   const tabFor={seeds:'Market',sell:'Market',boutique:'Boutique'};
   function goToStall(id) {
-    const open=()=>show(tabFor[id]);
-    if(atStall(id)){open();return;}
-    const go=()=>{panel.close();walkTo(stallPoint(id),open);};
-    if(farmAt())go();
-    else{panel.close();openFarm();}
+    show(tabFor[id]??'Market');
   }
-  function stallRoute(id,label) {
-    const route=makeButton(label,()=>goToStall(id));
-    route.className='life-route';
-    content.append(route);
-  }
+  function stallRoute() {}
 
   function buySeed(crop,count) {
     const total=crop.seed*count;
@@ -723,7 +715,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   function market() {
     infoLine('You have '+state.shells.toLocaleString()+' shells. Seeds cost shells, and everything you grow sells for more.');
     const seeds=atStall('seeds'),selling=atStall('sell');
-    heading('Seed Stall');
+    heading('Seeds');
     if(!seeds)stallRoute('seeds','Walk to the Seed Stall');
     for(const crop of crops){
       const row=give(crop.label+' seeds · '+crop.seed+' shells',
@@ -738,7 +730,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       row.append(group);
       content.append(row);
     }
-    heading('Sell Stall');
+    heading('Sell crops');
     if(!selling)stallRoute('sell','Walk to the Sell Stall');
     const items=sellable();
     if(!items.length)infoLine('Nothing to sell yet. Harvest crops or pack a dish in the kitchen.');

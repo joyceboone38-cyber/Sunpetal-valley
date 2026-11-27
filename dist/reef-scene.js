@@ -238,7 +238,7 @@ export function createReef(canvas, places) {
         col+=vec3(.022,.092,.121)*caustic*visibility*(.25+.48*layers+.22*channel*reach);
         float shelves=min(abs(length((q-vec2(-12.,1.))/vec2(8.5,7.2))-1.),
           abs(length((q-vec2(13.,-2.))/vec2(7.3,6.))-1.));
-        shelves=min(shelves,abs(length((q-vec2(${places.farmIsland.x.toFixed(2)},${places.farmIsland.z.toFixed(2)}))/vec2(8.4,6.5))-1.));
+        shelves=min(shelves,abs(length((q-vec2(${places.farmIsland.x.toFixed(2)},${places.farmIsland.z.toFixed(2)}))/vec2(7.8,7.8))-1.));
         col*=mix(.56,1.,smoothstep(.02,.47,shelves));
         col=mix(vec3(.018,.065,.121),col,.28+.72*visibility);
         gl_FragColor=vec4(col,1.);
@@ -1103,14 +1103,12 @@ export function createReef(canvas, places) {
   const reefLife=addReefLife(scene,haloTexture);
   const farmArea=buildFarmIsland(scene,places,materials,bed);
   const farmBedBoxes=places.fieldPlots.map(({x,z})=>new T.Box3(
-    new T.Vector3(x-.78,-.1,z-.78),new T.Vector3(x+.78,.5,z+.78)
+    new T.Vector3(x-.52,-.1,z-.52),new T.Vector3(x+.52,.6,z+.52)
   ));
   const farmBedGlow=mesh(farmArea.group,new T.TubeGeometry(new T.CatmullRomCurve3(
-    gardenOutline(1.62,1.62,.3).getPoints(16).slice(0,-1).map(point=>new T.Vector3(point.x,0,point.y)),true
+    gardenOutline(1.0,1.0,.2).getPoints(16).slice(0,-1).map(point=>new T.Vector3(point.x,0,point.y)),true
   ),64,.017,6,true),new T.MeshBasicMaterial({color:'#a7ffeb',transparent:true,opacity:.82}));
   farmBedGlow.visible=false;
-  shellLantern(farmArea.group,7.57,.48,.66);
-  shellLantern(farmArea.group,7.57,2.44,.66);
   const crossing=new T.Group();
   crossing.name='Farm Island crossing';
   scene.add(crossing);
@@ -1192,6 +1190,7 @@ export function createReef(canvas, places) {
     if(width!==viewWidth||height!==viewHeight){
       viewWidth=width;viewHeight=height;
       renderer.resize(width,height);
+      farmArea.setViewHeight?.(Math.round(height*Math.min(window.devicePixelRatio||1,2)));
       camera.aspect=width/Math.max(1,height);camera.updateProjectionMatrix();
     }
     const t=reduceMotion?0:time;
@@ -1219,7 +1218,10 @@ export function createReef(canvas, places) {
     }
     const featuredBed=places.fieldPlots[farmBed];
     farmBedGlow.visible=Boolean(featuredBed);
-    if(featuredBed)farmBedGlow.position.set(featuredBed.x-places.farmIsland.x,.14,featuredBed.z-places.farmIsland.z);
+    if(featuredBed){
+      farmBedGlow.position.set(featuredBed.x-places.farmIsland.x,.1,featuredBed.z-places.farmIsland.z);
+      farmBedGlow.rotation.y=featuredBed.yaw??0;
+    }
     for(const [index,buoy] of buoys.entries())buoy.position.y=.44+Math.sin(t*1.9+index*.65)*.09;
     const area=player.x<-1?'home':'reef';
     if(!inCottage&&area!==lastArea){
@@ -1250,12 +1252,12 @@ export function createReef(canvas, places) {
     aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21,focus.z);
     if(farmFraming>0){
       const position=places.farmIsland;
-      const farmX=T.MathUtils.lerp(position.x,focus.x,camera.aspect<.9?.70:.29);
+      const farmX=T.MathUtils.lerp(position.x-2.2,focus.x,camera.aspect<.9?.32:.22);
       const farmZ=T.MathUtils.lerp(position.z,focus.z,.42);
       camera.position.set(
         T.MathUtils.lerp(camera.position.x,farmX,farmFraming),
-        T.MathUtils.lerp(camera.position.y,10.2*tight,farmFraming),
-        T.MathUtils.lerp(camera.position.z,farmZ+13.7*tight,farmFraming)
+        T.MathUtils.lerp(camera.position.y,12.2*tight,farmFraming),
+        T.MathUtils.lerp(camera.position.z,farmZ+15.2*tight,farmFraming)
       );
       aim.set(T.MathUtils.lerp(aim.x,farmX,farmFraming),T.MathUtils.lerp(aim.y,.44,farmFraming),
         T.MathUtils.lerp(aim.z,farmZ,farmFraming));
@@ -1442,10 +1444,6 @@ export function createReef(canvas, places) {
     });
     return picked;
   }
-  function pickStall(x,y){
-    if(!farmArea.group.visible)return null;
-    return farmArea.farmstead.hit(screenRay(x,y).ray);
-  }
   function hitsWardrobe(x,y){
     return cottageArea.visible&&screenRay(x,y).intersectObject(wardrobe,true).length>0;
   }
@@ -1480,7 +1478,7 @@ export function createReef(canvas, places) {
     };
   }
   return {
-    render,pick,pickFarmBed,pickStall,hitsWardrobe,hitsKitchen,hitsMoonlacePearl,inspect,setQuality,setFitting:value=>{fitting=value;},
+    render,pick,pickFarmBed,hitsWardrobe,hitsKitchen,hitsMoonlacePearl,inspect,setQuality,setFitting:value=>{fitting=value;},
     rotateCamera,zoomCamera,resetCamera,cameraHeading:()=>yaw,
     prepareArea:area=>regionalArt?.ensure(area),
     dispose(){

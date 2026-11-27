@@ -6,7 +6,7 @@ import { crops, cropById } from './reef-crops.js';
 
 const pi=Math.PI;
 const half=.71;
-const top=.12; // height of the sand surface above the island paving
+let top=.12; // height of the plot surface above the island ground
 
 function roundedSquare(size,radius) {
   const h=size/2,shape=new T.Shape();
@@ -22,7 +22,11 @@ function roundedSquare(size,radius) {
   return shape;
 }
 
-export function createField(parent,plots,origin) {
+export function createField(parent,plots,origin,options={}) {
+  // overlay: the island model already draws the plot tiles, so only soil, plants and drops are added.
+  const overlay=Boolean(options.overlay);
+  const scale=options.scale??1;
+  if(options.surface!==undefined)top=options.surface;
   const group=new T.Group();
   group.name='Sunpetal sand field';
   parent.add(group);
@@ -37,6 +41,7 @@ export function createField(parent,plots,origin) {
   const crumb=new T.SphereGeometry(1,8,6);
   const sand=new T.MeshStandardMaterial({color:'#dd86ac',roughness:.97,emissive:'#ff8fb8',emissiveIntensity:.05});
   const sandAlt=new T.MeshStandardMaterial({color:'#d77da5',roughness:.97,emissive:'#ff8fb8',emissiveIntensity:.05});
+  const addedTile=new T.MeshStandardMaterial({color:'#7d4f38',roughness:.92});
   const furrow=new T.MeshStandardMaterial({color:'#cc7a9c',roughness:.98});
   const soil=new T.MeshStandardMaterial({color:'#6e3447',roughness:.95});
   const soilWet=new T.MeshStandardMaterial({color:'#4f2338',roughness:.8});
@@ -57,15 +62,26 @@ export function createField(parent,plots,origin) {
   const tiles=plots.map((plot,index)=>{
     const root=new T.Group();
     root.position.set(plot.x-origin.x,0,plot.z-origin.z);
+    root.rotation.y=plot.yaw??0;
+    root.scale.setScalar(scale);
     group.add(root);
-    const base=new T.Mesh(tileGeometry,(index+Math.floor(index/6))%2?sand:sandAlt);
-    base.position.y=.02;
-    base.receiveShadow=true;
-    root.add(base);
-    for(const z of [-.34,.34]){
-      const line=new T.Mesh(ripple,furrow);
-      line.position.set(0,top+.004,z);
-      root.add(line);
+    if(!overlay){
+      const base=new T.Mesh(tileGeometry,(index+Math.floor(index/6))%2?sand:sandAlt);
+      base.position.y=.02;
+      base.receiveShadow=true;
+      root.add(base);
+      for(const z of [-.34,.34]){
+        const line=new T.Mesh(ripple,furrow);
+        line.position.set(0,top+.004,z);
+        root.add(line);
+      }
+    }else if(plot.added){
+      // The model draws 11 tiles; this one matches them.
+      const tile=new T.Mesh(tileGeometry,addedTile);
+      tile.scale.set(1,.5,1);
+      tile.position.y=top-.05;
+      tile.receiveShadow=true;
+      root.add(tile);
     }
     const hole=new T.Group();
     const dirt=new T.Mesh(holeGeometry,soil);
@@ -197,8 +213,8 @@ export function createField(parent,plots,origin) {
         tile.pop+=dt/.5;
         const u=Math.min(1,tile.pop);
         const spring=1+.3*(1-u)*Math.sin(u*pi*3.2);
-        tile.root.scale.set(1/Math.sqrt(spring),spring,1/Math.sqrt(spring));
-        if(u>=1){tile.root.scale.set(1,1,1);tile.pop=undefined;}
+        tile.root.scale.set(scale/Math.sqrt(spring),scale*spring,scale/Math.sqrt(spring));
+        if(u>=1){tile.root.scale.setScalar(scale);tile.pop=undefined;}
       });
     }
   };

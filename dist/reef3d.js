@@ -22,7 +22,7 @@ const storageKey = 'sunpetal-3d-progress-v1';
 const decorKey = 'sunpetal-fountain-spot';
 
 const { farm, jelly, shelf, station, grotto, glass, secondBed, displaySpots, travelLandings,
-  farmIsland, outdoorBounds, onFarmIsland, cottageRoom, cottageDoor, farmDock, kitchen, wardrobe, stalls } = reefLayout;
+  farmIsland, outdoorBounds, onFarmIsland, cottageRoom, cottageDoor, farmDock, kitchen, wardrobe } = reefLayout;
 const quests = [
   { ...jelly, name: 'Meet Luma', text: 'Swim to the jellyfish in the channel.', action: 'Meet Luma' },
   { ...jelly, name: 'Ride the current', text: 'Let Luma guide you to Moonlace Reef.', action: 'Ride current' },
@@ -159,10 +159,6 @@ function mirrorNearby(){
 function nearbyAreaAction(now=Date.now()){
   if(current)return;
   if(player.space==='farm'){
-    const labels={seeds:'Seed Stall',boutique:'Pearl Boutique',sell:'Sell Stall'};
-    for(const id of Object.keys(labels)){
-      if(distance(player,stalls[id].stand)<2.0)return {label:labels[id],run:()=>life.goToStall(id)};
-    }
     return life.lumaTending(now)
       ? {label:'Luma watering…',disabled:true}
       : {label:'Ask Luma',run:life.askLuma};
@@ -346,6 +342,16 @@ function move(now, dt) {
   const bounds=player.space==='cottage'?cottageRoom.bounds:outdoorBounds;
   player.x = clamp(player.x+player.vx*dt,bounds.left,bounds.right);
   player.z = clamp(player.z+player.vz*dt,bounds.back,bounds.front);
+  if(player.space==='farm'){
+    // Keep the player on the island's flat top, inside the coral rim.
+    const {rx,rz}=farmIsland.ellipse;
+    const ex=(player.x-farmIsland.x)/rx,ez=(player.z-farmIsland.z)/rz;
+    const reach=Math.hypot(ex,ez);
+    if(reach>1){
+      player.x=farmIsland.x+ex/reach*rx;
+      player.z=farmIsland.z+ez/reach*rz;
+    }
+  }
   if (Math.hypot(player.vx,player.vz) > .25) {
     const heading = Math.atan2(player.vx,player.vz);
     const difference = Math.atan2(Math.sin(heading-player.heading),Math.cos(heading-player.heading));
@@ -386,7 +392,7 @@ function frame(now) {
   areaAction.hidden=!here;
   areaAction.disabled=Boolean(here?.disabled);
   if(here&&areaAction.textContent!==here.label)areaAction.textContent=here.label;
-  const region = player.space==='farm'?'Sunpetal Farm Island':player.space==='cottage'?'Sunpetal Cottage'
+  const region = player.space==='farm'?'Pearl Reef Sanctuary':player.space==='cottage'?'Sunpetal Cottage'
     :player.x < -5 ? 'Sunpetal Homebase' : player.x > 8 ? (player.z < -3.3 ? 'Glassfin Grotto' : 'Moonlace Reef') : 'Luma’s Current';
   if (location.textContent !== region) location.textContent = region;
   document.body.dataset.questStep = String(step);
@@ -416,12 +422,6 @@ function frame(now) {
 function selectWorldPoint(event){
   if(decor.active){decor.tap(event);return;}
   if (current || cooking || menuOpen()) return;
-  const stall=view.pickStall?.(event.clientX,event.clientY);
-  if(stall){
-    target=pendingAction=pendingVisit=undefined;
-    life.goToStall(stall);
-    return;
-  }
   const farmBed=view.pickFarmBed?.(event.clientX,event.clientY)??-1;
   if(farmBed>=0){
     target=pendingAction=pendingVisit=undefined;

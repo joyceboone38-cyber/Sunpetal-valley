@@ -52,6 +52,8 @@ function blinkAt(time) {
 
 export function prepareCharacterExpression(model,id) {
   const profile = faces[id];
+  // Characters without hand-measured eye landmarks keep their own face and skip the blink layer.
+  if(!profile) return {update(){},eyeHeight:undefined};
   model.updateMatrixWorld(true);
   const morphs = [];
   const point = new T.Vector3();

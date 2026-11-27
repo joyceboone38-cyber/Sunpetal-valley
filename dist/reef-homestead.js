@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.min.js';
 import { createField } from './reef-field.js';
-import { createFarmstead } from './reef-farmstead.js';
+import { loadReefModel } from './reef-model-loader.js';
 
 const pi=Math.PI;
 function mesh(parent,shape,material,x,y,z){
@@ -68,58 +68,64 @@ function cropInstances(parent,kind,materials){
   return flowers;
 }
 
-export function buildFarmIsland(scene,layout,materials,buildBed){
+// Model-space height of the plot tops in the Pearl Reef Sanctuary (measured from the file).
+const sanctuaryPlotTop=.1186;
+const plotScale=.62;
+
+export function buildFarmIsland(scene,layout,materials){
   const {farmIsland,fieldPlots}=layout;
   const group=new T.Group();
-  group.name='Sunpetal Farm Island';
+  group.name='Pearl Reef Sanctuary (farm)';
   group.position.set(farmIsland.x,0,farmIsland.z);
   scene.add(group);
-  const {wood,gold}=materials;
-  const slate=materials.limestone('#495e82');
-  const rim=materials.nacre('#b79ad0');
-  const paving=materials.limestone('#dca7b8'); // [sunpetal-sand]
-  const pale=materials.nacre('#e3cedc');
-  const lilac=materials.nacre('#c78be5');
-  const aqua=materials.nacre('#69cac0');
-  raisedIsland(group,slate,17.1,12.8,.68,-.95,1.95).position.z=.95;
-  raisedIsland(group,rim,16.8,12.5,.1,-.255,1.82).position.z=.95;
-  raisedIsland(group,paving,16.51,12.24,.04,-.18,1.7).position.z=.95;
-  for(let i=0;i<8;i++){
-    block(group,wood,7.37+i*.26,.048,1.46,.232,.1,1.53);
-  }
-  const field=createField(group,fieldPlots,farmIsland);
-  const farmstead=createFarmstead(group,layout);
-  for(const x of [-7.6,-1.27,1.27,7.6]){
-    for(const z of [-4.78,4.82]){
-      if(z<0&&Math.abs(x)<5)continue;
-      disk(group,wood,x,.36,z,.073,.75);
-      disk(group,gold,x,.74,z,.153,.065);
-      mesh(group,new T.SphereGeometry(.119,12,10),new T.MeshStandardMaterial({
-        color:'#ffddb1',emissive:'#ffc879',emissiveIntensity:.72,roughness:.29
-      }),x,.86,z);
+  const field=createField(group,fieldPlots,farmIsland,{overlay:true,scale:plotScale});
+  const groundY=.074; // where the plot tops sit in the game world
+  const state={life:null,viewHeight:800,time:0,loaded:false};
+
+  // Shown only if the model cannot load, so the farm still works.
+  const fallback=new T.Group();
+  fallback.name='Sanctuary fallback ground';
+  const disk=new T.Mesh(new T.CylinderGeometry(1,1,.12,48),materials.limestone('#dca7b8'));
+  disk.scale.set(farmIsland.ellipse.rx,1,farmIsland.ellipse.rz);
+  disk.position.y=groundY-.06;
+  disk.receiveShadow=true;
+  fallback.add(disk);
+  fallback.visible=false;
+  group.add(fallback);
+
+  loadReefModel('./environment/pearl-reef-sanctuary.glb').then(async({scene:model})=>{
+    model.name='Pearl Reef Sanctuary';
+    model.scale.setScalar(farmIsland.scale);
+    model.position.y=groundY-sanctuaryPlotTop*farmIsland.scale;
+    model.traverse(object=>{if(object.isMesh)object.receiveShadow=true;});
+    group.add(model);
+    state.loaded=true;
+    try{
+      const {animateMeshyIsland}=await import('./reef-sanctuary-motion.js');
+      state.life=animateMeshyIsland(model,{float:false});
+      state.life.setViewHeight(state.viewHeight);
+      // The game's lights are brighter than the model's own preview, so tone it down a touch.
+      model.traverse(object=>{
+        if(!object.isMesh)return;
+        object.material.color.multiplyScalar(.8);
+        object.material.envMapIntensity=.5;
+      });
+    }catch(error){
+      // The island still shows without its motion.
     }
-  }
-  for(const sign of [-1,1]){
-    block(group,wood,sign*3.14,.14,5.76,1.45,.24,.66);
-    block(group,pale,sign*3.14,.31,5.76,1.53,.11,.71);
-  }
-  const edgeStone=new T.IcosahedronGeometry(1,1);
-  const edgeGrass=materials.textile('#4b927f');
-  const edgeBloom=materials.nacre('#dc9abd');
-  for(const side of [-1,1]){
-    for(const [x,z] of [[7.57,-4.52],[8.13,-1.56],[8.09,1.89],[7.73,5.04],[5.91,6.18],[2.03,6.20]]){
-      const rock=mesh(group,edgeStone,slate,x*side,.04,z);
-      rock.scale.set(.36,.21,.36);
-      for(let i=0;i<5;i++){
-        const leaf=mesh(group,leafShape,i===2?edgeBloom:edgeGrass,x*side+(i-2)*.103,.22+.09*Math.sin(i*pi/4),z+.075*(i%2));
-        leaf.scale.set(.07,.15+.12*Math.sin(i*pi/4),.043);
-        leaf.rotation.z=(i-2)*-.26;
-      }
-    }
-  }
-  return {group,farmstead,
+  }).catch(()=>{fallback.visible=true;});
+
+  return {group,
     update(tilesNow){field.update(tilesNow);},
-    tick(dt,time){field.tick(dt,time);}
+    tick(dt,time){
+      field.tick(dt,time);
+      state.life?.update(time);
+    },
+    setViewHeight(pixels){
+      state.viewHeight=pixels;
+      state.life?.setViewHeight(pixels);
+    },
+    get loaded(){return state.loaded;}
   };
 }
 
