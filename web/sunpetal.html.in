@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07172d">
-<meta name="description" content="Explore Sunpetal Homebase, ride Luma's glowing current to Moonlace Reef, grow underwater blooms, and place a tideglass fountain.">
+<meta name="description" content="Explore the Sunpetal Plaza, ride Luma's glowing current to Moonlace Reef, grow underwater blooms, and place a tideglass fountain.">
 <title>Sunpetal Valley · Mermaid Life</title>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <style>
@@ -187,12 +187,12 @@ html.glam a{color:#ffb8ec}
   <h2 id="questName">Meet Luma</h2>
   <p id="questText" aria-live="polite"></p>
   <div id="fountainChoices" hidden>
-    <button type="button" data-fountain-spot="0">Cottage steps</button>
+    <button type="button" data-fountain-spot="0">Fountain steps</button>
     <button type="button" data-fountain-spot="1">Garden overlook</button>
   </div>
 <small class="touch-help">Tap to swim · Drag to rotate · Pinch to zoom</small>
 </section>
-<div class="location" id="location" aria-live="polite">Sunpetal Homebase</div>
+<div class="location" id="location" aria-live="polite">Sunpetal Plaza</div>
 <div class="controls glass">WASD / arrows · Swim &nbsp; Shift · Burst &nbsp; E · Interact &nbsp; T · Travel<span>Wheel · Zoom &nbsp; Drag · Rotate &nbsp; 0 · Reset camera</span></div>
 <div class="actions">
   <button type="button" id="area-action" hidden></button>
@@ -214,10 +214,10 @@ html.glam a{color:#ffb8ec}
   <p><strong>Move:</strong> WASD / arrow keys, or tap the water. Hold Shift or press Burst to swim faster.</p>
   <p><strong>Camera</strong> Scroll the wheel or press + and − to zoom. Drag or use [ and ] to rotate. On touchscreens, drag to rotate and pinch to zoom. Press 0 to reset the view.</p>
   <p><strong>Quest:</strong> Press E or tap Go to quest marker; your mermaid swims to the glowing marker and interacts automatically. Using the movement keys cancels auto-swim.</p>
-  <p><strong>Travel:</strong> After meeting Luma, press T or use Travel to shuttle between Sunpetal Homebase and Moonlace Reef. You can also swim across the channel yourself.</p>
-  <p><strong>Farm Island</strong> is west of Homebase. Swim past the lantern buoys or tap the Farm Island button to swim there automatically. Enter the cottage to cook or use the wardrobe mirror.</p>
+  <p><strong>Travel:</strong> After meeting Luma, press T or use Travel to shuttle between the Sunpetal Plaza and Moonlace Reef. You can also swim across the water yourself.</p>
+  <p><strong>Farm Island</strong> is west of the plaza. Swim past the lantern buoys or tap the Farm Island button to swim there automatically. Enter the cottage to cook or use the wardrobe mirror.</p>
   <p>On Farm Island, tap a bed to swim to it and work it, or press <strong>E</strong> beside a bed. Plant a bed, then tap <strong>Ask Luma</strong> to have her tend it.</p>
-  <p><strong>Fountain:</strong> Finish the story, select Cottage steps or Garden overlook, and your mermaid will place the crafted fountain there. You can move it again later.</p>
+  <p><strong>Fountain:</strong> Finish the story, select Fountain steps or Garden overlook, and your mermaid will place the crafted fountain there. You can move it again later.</p>
   <p>Open <strong>Life</strong> or press L to change your look, tend the gardens, cook, explore, and craft accessories.</p>
   <label class="quality-option"><input type="checkbox" id="low-graphics"> Low graphics</label>
   <p><a href="illustrated.html">Open the illustrated preview</a></p>

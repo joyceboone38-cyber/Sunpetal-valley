@@ -139,8 +139,8 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   let section='Wardrobe',outfitRequest=0,noticeTimer,selectedUid='';
   let lumaButton;
   const landmarks=[
-    {id:'shell',name:'Waterfall Shell Cottage',point:{x:-13.1,z:.21},hint:'Sunpetal Homebase'},
-    {id:'pool',name:'Pearl Tidepool',point:{x:-7.5,z:1.65},hint:'Sunpetal Homebase'},
+    {id:'shell',name:'Seashell Cottage',point:layout.cottageLanding,hint:'Sunpetal Plaza'},
+    {id:'pool',name:'Shell Fountain',point:{x:-9.9,z:3.4},hint:'Sunpetal Plaza'},
     {id:'shelf',name:'Moonlace Shelf',point:layout.shelf,hint:'Moonlace Reef'},
     {id:'grotto',name:'Glassfin Grotto',point:layout.grotto,hint:'Moonlace Reef'}
   ];
@@ -691,7 +691,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     store();
     report('Moonlace Pearl found');
     getView()?.celebrate?.('pearl');
-    note.textContent='Bring your pearl to the Homebase Workshop.';
+    note.textContent='Bring your pearl to the Plaza Workshop.';
     update();
   }
 
@@ -732,7 +732,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       :style.pearlFound?'Moonlace Pearl · 1 needed, 1 found':'Moonlace Pearl · 1 needed, 0 found');
     if(style.charmMade)row.append(makeButton('Open Wardrobe',()=>show('Wardrobe')));
     else if(!style.pearlFound)row.append(makeButton('Find pearl',()=>show('Explore')));
-    else if(player.x>=8&&canExploreMoonlace())row.append(makeButton('Return to Homebase',()=>{
+    else if(player.x>=8&&canExploreMoonlace())row.append(makeButton('Return to the Plaza',()=>{
       panel.close();
       travelTo('home');
     }));

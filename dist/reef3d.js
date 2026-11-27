@@ -58,7 +58,7 @@ try {
   if (step === quests.length && ['0', '1'].includes(savedSpot)) display = Number(savedSpot);
 } catch {}
 
-const player = { x: -9, z: 7, vx: 0, vz: 0, heading: .9, space:'outdoor' };
+const player = { x: -9.9, z: 3.2, vx: 0, vz: 0, heading: .9, space:'outdoor' };
 const cookingPoint={x:kitchen.x-.22,z:kitchen.z+1.02,space:'cottage'};
 const wardrobePoint={x:wardrobe.x+.18,z:wardrobe.z+1.08,space:'cottage'};
 const keys = new Set();
@@ -182,7 +182,7 @@ function updateQuest() {
   const quest = quests[step];
   questName.textContent = quest?.name ?? (display < 0 ? 'Choose a fountain home' : 'Tideglass fountain placed');
   questText.textContent = quest?.text ?? (display < 0
-    ? 'Choose Cottage steps or Garden overlook below. Swim to the glowing pad to place your fountain.'
+    ? 'Choose Fountain steps or Garden overlook below. Swim to the glowing pad to place your fountain.'
     : `Your fountain is at ${displaySpots[display].name.toLowerCase()}. Choose the other site to move it.`);
   const completed = Math.min(step, quests.length);
   progressText.textContent = step === quests.length ? 'Fountain unlocked' : `Story ${completed + 1} / ${quests.length}`;
@@ -232,7 +232,7 @@ function travel() {
     return;
   }
   if(step<2)return;
-  const destination = player.x < 2 ? travelLandings.reef : travelLandings.home;
+  const destination = player.x < 4.5 ? travelLandings.reef : travelLandings.home;
   beginCurrent(destination);
 }
 
@@ -375,15 +375,15 @@ function frame(now) {
   farmAccess.hidden=player.space==='farm';
   farmAccess.disabled=Boolean(current);
   document.querySelector('#life-open').disabled=Boolean(current);
-  const travelLabel = player.space==='cottage'?'Leave cottage':player.space==='farm'?'Return to Homebase'
-    :current?'Traveling…':player.x<2?'Travel to Moonlace':'Return to Sunpetal';
+  const travelLabel = player.space==='cottage'?'Leave cottage':player.space==='farm'?'Return to the Plaza'
+    :current?'Traveling…':player.x<4.5?'Travel to Moonlace':'Return to Sunpetal';
   if (travelButton.textContent !== travelLabel) travelButton.textContent = travelLabel;
   const here=nearbyAreaAction(wallTime);
   areaAction.hidden=!here;
   areaAction.disabled=Boolean(here?.disabled);
   if(here&&areaAction.textContent!==here.label)areaAction.textContent=here.label;
   const region = player.space==='farm'?'Pearl Reef Sanctuary':player.space==='cottage'?'Sunpetal Cottage'
-    :player.x < -5 ? 'Sunpetal Homebase' : player.x > 8 ? (player.z < -3.3 ? 'Glassfin Grotto' : 'Moonlace Reef') : 'Luma’s Current';
+    :player.x < 4 ? 'Sunpetal Plaza' : player.x > 8 ? (player.z < -3.3 ? 'Glassfin Grotto' : 'Moonlace Reef') : 'Luma’s Current';
   if (location.textContent !== region) location.textContent = region;
   document.body.dataset.questStep = String(step);
   document.body.dataset.fountainSpot = String(display);
