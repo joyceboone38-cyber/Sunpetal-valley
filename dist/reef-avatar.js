@@ -7,10 +7,7 @@ import { buildMoonlaceCharm } from './reef-keepsake.js';
 import { createSwimMotion } from './reef-motion.js';
 
 export const outfits = [
-  {id:'Ponytail-Fashion-Avatar',name:'Tideglass Couture'},
-  {id:'Blossom-Fairy',name:'Blossom Fairy'},
-  {id:'Tideglass-Witch',name:'Tideglass Witch'},
-  {id:'Starwing-Fairy',name:'Starwing Fairy'}
+  {id:'Sea-Fairy',name:'Sea Fairy'}
 ];
 
 function swimClip(model){
@@ -46,13 +43,22 @@ async function prepareOutfit(id) {
   model.position.set(-center.x,-bounds.min.y,-center.z);
   const pivot=new T.Group();
   pivot.add(model);
-  const eyeLine=(expression.eyeHeight??bounds.min.y+height*.86)-bounds.min.y;
+  const head=model.getObjectByName('Head');
+  const headY=head?head.getWorldPosition(new T.Vector3()).y+height*.035:undefined;
+  const eyeLine=(expression.eyeHeight??headY??bounds.min.y+height*.86)-bounds.min.y;
   // Scale by the wearer's eye line, so hats and wings do not resize their body.
   const factor=1.12/eyeLine;
   pivot.scale.setScalar(factor);
   prepareCharacterFinish(pivot)(true);
-  const clips=new Map(animations.concat(gaits,swim).map(clip=>[clip.name,clip]));
+  // The model's own Idle, Walk and Run win over the generated gaits.
+  const clips=new Map(gaits.concat(animations,swim).map(clip=>[clip.name,clip]));
   if(cooking)clips.set(cooking.name,cooking);
+  else if(clips.has('Spell Cast')){
+    // No generated cooking clip for this rig: stir with the model's own casting motion.
+    const stir=clips.get('Spell Cast').clone();
+    stir.name='Cooking';
+    clips.set('Cooking',stir);
+  }
   return {
     pivot,clips,expression,height:height*factor,mixer:new T.AnimationMixer(pivot),
     wrist:model.getObjectByName('HandL')??model.getObjectByName('Hand.L')

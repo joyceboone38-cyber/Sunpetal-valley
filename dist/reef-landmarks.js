@@ -190,31 +190,24 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
       imported[key]=false;
     }));
   };
-  attach('waterfall cottage','waterfall-cottage.glb',({scene:asset,animations})=>{
-    asset.name='Waterfall Shell Cottage';
-    const scale=5.70;
-    asset.scale.set(scale,7.45,scale);
-    asset.position.set(places.cottage.x-.01745*scale,.061,places.cottage.z-.02650*scale-.12);
+  attach('seashell cottage','seashell-cottage.glb',({scene:asset})=>{
+    asset.name='Pastel Seashell Cottage';
+    const scale=6.4;
+    asset.scale.setScalar(scale);
+    // The model faces +Z. Its front, awning included, stops just short of the door point.
+    const bounds=new T.Box3().setFromObject(asset,true);
+    const center=bounds.getCenter(new T.Vector3());
+    if(bounds.isEmpty()) throw new Error('Invalid cottage bounds');
+    asset.position.set(places.cottage.x-center.x,.061-bounds.min.y,places.cottageDoor.z-.35-bounds.max.z);
     asset.traverse(object=>{
       if(!object.isMesh||object.material.transparent) return;
       object.castShadow=true;
       object.receiveShadow=true;
-      const material=object.material;
-      material.envMapIntensity=.78;
-      material.metalness*=.69;
-      material.roughness*=.85;
-      if(material.normalScale) material.normalScale.multiplyScalar(.76);
-      if(material.specularColor) material.specularColor.multiplyScalar(.72);
+      object.material.envMapIntensity=.6;
     });
     scene.add(asset);
     home.visible=false;
     renderer.refreshShadows?.();
-    if(animations[0]){
-      clock.mixer=new T.AnimationMixer(asset);
-      clock.duration=animations[0].duration;
-      clock.mixer.clipAction(animations[0]).play();
-      clock.mixer.update(0);
-    }
   });
   attach('pearl wardrobe mirror','pearl-wardrobe.glb',({scene:asset})=>{
     asset.name='Pearl Wardrobe Mirror';
@@ -254,8 +247,8 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
     placeholder.add(asset);
     renderer.refreshShadows?.();
   }
-  attach('jewel shell kitchen','jewel-kitchen.glb',({scene:asset})=>{
-    fitProp(kitchen,asset,'Jewel Shell Kitchen',-Math.PI/2,[.94,.94,.94],-.025);
+  attach('pearl reef kitchen','pearl-reef-kitchen.glb',({scene:asset})=>{
+    fitProp(kitchen,asset,'Pearl Reef Kitchen',0,[2,2,2],-.025);
   });
   attach('shell garden planters','shell-planter.glb',({scene:asset})=>{
     // The soil surface lands at the same height as the existing crop roots.

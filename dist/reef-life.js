@@ -76,7 +76,13 @@ export function addReefLife(scene, haloTexture) {
   const schools=[
     {x:-6.3,y:1.15,z:1.5,rx:3.3,rz:2.2,speed:.52,phase:.74,count:9,tint:'#c0e3dd'},
     {x:2.9,y:1.15,z:-5.2,rx:5.8,rz:3.2,speed:.31,phase:4.9,count:12,tint:'#9bbdec'},
-    {x:10.2,y:.75,z:4.0,rx:3.7,rz:1.9,speed:.55,phase:3.7,count:8,tint:'#e2d4a6'}
+    {x:10.2,y:.75,z:4.0,rx:3.7,rz:1.9,speed:.55,phase:3.7,count:8,tint:'#e2d4a6'},
+    // [sunpetal-alive] candy colored schools, including some around Farm Island
+    {x:-34,y:1.3,z:3.5,rx:8.4,rz:5.6,speed:.28,phase:1.2,count:12,tint:'#ffb0dd'},
+    {x:-34,y:.9,z:3.5,rx:6.0,rz:4.0,speed:.4,phase:3.1,count:9,tint:'#d2b4ff'},
+    {x:-22,y:1.6,z:-3.0,rx:4.6,rz:3.0,speed:.36,phase:5.2,count:9,tint:'#ffd98a'},
+    {x:-2.0,y:1.9,z:8.0,rx:5.0,rz:2.4,speed:.33,phase:2.3,count:8,tint:'#9fe8ff'},
+    {x:-13,y:2.0,z:-8.0,rx:6.5,rz:3.0,speed:.24,phase:0.4,count:10,tint:'#ffb0dd'}
   ].map(school=>{
     const batch=new T.InstancedMesh(fish,fishMaterial,school.count);
     batch.name='Reef fish school';
@@ -92,12 +98,12 @@ export function addReefLife(scene, haloTexture) {
   });
   const transform=new T.Object3D();
 
-  const count=210;
+  const count=340;
   const geometry=new T.BufferGeometry();
   const positions=[], phases=[], sizes=[];
   for(let i=0;i<count;i++){
     positions.push(
-      ((i*.61803398875)%1-.5)*54,
+      ((i*.61803398875)%1)*84-54,
       ((i*.754877666)%1)*10-1.8,
       ((i*.569840291)%1-.55)*42
     );
@@ -116,6 +122,7 @@ export function addReefLife(scene, haloTexture) {
       attribute float phase;
       attribute float size;
       varying float glimmer;
+      varying float tone;
       void main(){
         vec3 point=position;
         point.x+=sin(clock*.15+phase)*.88;
@@ -125,14 +132,18 @@ export function addReefLife(scene, haloTexture) {
         gl_Position=projectionMatrix*view;
         gl_PointSize=clamp(size*screenScale/max(1.,-view.z),1.5,15.);
         float depthFade=1.-smoothstep(13.,42.,-view.z);
-        glimmer=(.29+.45*pow(.5+.5*sin(clock*.8+phase),3.))*depthFade*smoothstep(1.,5.,-view.z);
+        tone=fract(phase*.318309);
+        glimmer=(.34+.5*pow(.5+.5*sin(clock*.8+phase),3.))*depthFade*smoothstep(1.,5.,-view.z);
       }`,
     fragmentShader:`
       uniform sampler2D glowMap;
       varying float glimmer;
+      varying float tone;
       void main(){
         float light=texture2D(glowMap,gl_PointCoord).a;
-        gl_FragColor=vec4(.33,.79,1.,glimmer*light);
+        vec3 tint=mix(vec3(.33,.79,1.),vec3(1.,.66,.92),smoothstep(.35,.65,tone));
+        tint=mix(tint,vec3(1.,.9,.55),smoothstep(.8,.95,tone));
+        gl_FragColor=vec4(tint,glimmer*light);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`

@@ -39,7 +39,11 @@ const fragmentShader=`
 
 const cropColors={
   moonlace:['#f4c6ff','#ffffff','#ff9bd8'],
-  starkelp:['#8dffd0','#ffffff','#d6ff9b']
+  starkelp:['#8dffd0','#ffffff','#d6ff9b'],
+  coralberry:['#ff8fb0','#ffffff','#ffc2dd'],
+  pearlbean:['#fff4e0','#ffffff','#d6f6ff'],
+  sunbloom:['#ffe27a','#ffffff','#ffb86b'],
+  glimmermelon:['#9fe8ff','#ffffff','#c9b6ff']
 };
 const warm=['#ffe3a0','#ffffff','#ffc2dd'];
 

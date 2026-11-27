@@ -25,8 +25,6 @@ export const propSlots=[
   {file:'seaweed.glb',area:'reef',x:-6.2,z:2.9,height:.9,sway:true},
   {file:'seaweed.glb',area:'reef',x:-8.8,z:.6,height:.8,sway:true,rotY:1.7},
   // Farm Island, near the dock end
-  {file:'crate.glb',area:'farm',x:6.9,z:3.6,height:.5,rotY:.3},
-  {file:'basket.glb',area:'farm',x:6.9,z:-.9,height:.4},
   // Cottage kitchen, beside the stove
   {file:'bowl.glb',area:'cottage',x:-1.6,z:-2.0,height:.25},
   {file:'basket.glb',area:'cottage',x:-2.3,z:-1.6,height:.4,rotY:.5}

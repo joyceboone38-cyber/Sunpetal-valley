@@ -1,6 +1,8 @@
 import { createReef } from './reef-scene.js';
 import { reefLayout } from './reef-layout.js';
 import { connectLife, loadLife } from './reef-activities.js';
+import { createStick } from './reef-touch.js'; // [sunpetal-stick]
+import { createDecorator } from './reef-decorate.js';
 export { useEmbeddedReefAssets } from './reef-model-loader.js';
 
 let canvas = document.querySelector('#world');
@@ -60,6 +62,7 @@ const player = { x: -9, z: 7, vx: 0, vz: 0, heading: .9, space:'outdoor' };
 const cookingPoint={x:kitchen.x-.22,z:kitchen.z+1.02,space:'cottage'};
 const wardrobePoint={x:wardrobe.x+.18,z:wardrobe.z+1.08,space:'cottage'};
 const keys = new Set();
+const stick = createStick({onStart:()=>{target=pendingAction=pendingVisit=undefined;}}); // [sunpetal-stick]
 const directions = new Set(['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'shift']);
 const distance = (a,b) => Math.hypot(a.x-b.x,a.z-b.z);
 const clamp = (value, low, high) => Math.max(low,Math.min(high,value));
@@ -69,7 +72,7 @@ let frameRequest,firstFrame,hasStarted=false;
 let openFarmOnStart=window.location&&new URLSearchParams(window.location.search).get('area')==='farm';
 const life=connectLife({
   state:lifeState,getView:()=>view,layout:reefLayout,player,
-  onOpen(){keys.clear();player.vx=player.vz=0;},
+  onOpen(){keys.clear();stick.reset();player.vx=player.vz=0;},
   canOpen:()=>!current&&!cooking&&!guide.open,
   canExploreMoonlace:()=>step>=2,
   travelTo:area=>{
@@ -77,10 +80,16 @@ const life=connectLife({
     beginCurrent(travelLandings[area]);
   },
   walkTo,openFarm,cookingPoint,startCooking,wardrobePoint,
+  startDecorating:id=>{
+    if(player.space==='cottage')decor.enter(id);
+    else goToCottagePoint(cottageRoom.arrival,()=>decor.enter(id));
+  },
   goToKitchen:onArrival=>goToCottagePoint(cookingPoint,onArrival),
   goToWardrobe:onArrival=>goToCottagePoint(wardrobePoint,onArrival)
 });
-const menuOpen=()=>guide.open||life.panel.open;
+const decor=createDecorator({life,getView:()=>view,player,room:cottageRoom,
+  onChange:()=>{keys.clear();stick.reset();target=pendingAction=pendingVisit=undefined;}});
+const menuOpen=()=>guide.open||life.panel.open||decor.active;
 
 function startCooking(finish){
   if(!view||cooking||player.space!=='cottage')return false;
@@ -151,9 +160,10 @@ function nearbyAreaAction(now=Date.now()){
   if(current)return;
   if(player.space==='farm'){
     return life.lumaTending(now)
-      ? {label:'Luma tending…',disabled:true}
+      ? {label:'Luma watering…',disabled:true}
       : {label:'Ask Luma',run:life.askLuma};
   }
+  if(player.space==='cottage')return {label:'Decorate',run:()=>decor.enter('')};
   if(player.space!=='outdoor')return;
   if(distance(player,cottageDoor)<2.35)return {label:'Enter cottage',run:openCottage};
   if(distance(player,farmDock)<2.05)return {label:'Swim to Farm Island',run:openFarm};
@@ -239,8 +249,7 @@ function interact() {
   const quest = activeQuest();
   if (!view || !quest || menuOpen() || current || cooking) return;
   if(player.space==='farm'){
-    const bed=life.closestBed();
-    if(bed>=0&&target?.farmBed===undefined)life.useBed(bed);
+    if(target?.farmBed===undefined)life.farmAction();
     return;
   }
   if(player.space==='cottage'){
@@ -293,6 +302,12 @@ function move(now, dt) {
   let x = Number(keys.has('d') || keys.has('arrowright')) - Number(keys.has('a') || keys.has('arrowleft'));
   let z = Number(keys.has('s') || keys.has('arrowdown')) - Number(keys.has('w') || keys.has('arrowup'));
   let pace = 1;
+  const pad = stick.vector();
+  if (pad.active && !cooking) {
+    target = pendingAction = pendingVisit = undefined;
+    x = pad.x;
+    z = pad.z;
+  }
   if (target) {
     x = target.x-player.x;
     z = target.z-player.z;
@@ -320,13 +335,23 @@ function move(now, dt) {
     [x,z]=[x*cos+z*sin,z*cos-x*sin];
   }
   const magnitude = Math.hypot(x,z) || 1;
-  const speed = (keys.has('shift') || now < boostUntil ? 11.2 : 6.6)*pace*life.speedBoost;
+  const speed = (keys.has('shift') || now < boostUntil ? 11.2 : 6.6)*pace*(pad.active?Math.min(1,Math.hypot(pad.x,pad.z)):1)*life.speedBoost;
   const response = 1-Math.exp(-dt*(distance(player,farm)<2.8 ? 15 : x || z ? 9 : 6));
   player.vx += (x/magnitude*speed-player.vx)*response;
   player.vz += (z/magnitude*speed-player.vz)*response;
   const bounds=player.space==='cottage'?cottageRoom.bounds:outdoorBounds;
   player.x = clamp(player.x+player.vx*dt,bounds.left,bounds.right);
   player.z = clamp(player.z+player.vz*dt,bounds.back,bounds.front);
+  if(player.space==='farm'){
+    // Keep the player on the island's flat top, inside the coral rim.
+    const {rx,rz}=farmIsland.ellipse;
+    const ex=(player.x-farmIsland.x)/rx,ez=(player.z-farmIsland.z)/rz;
+    const reach=Math.hypot(ex,ez);
+    if(reach>1){
+      player.x=farmIsland.x+ex/reach*rx;
+      player.z=farmIsland.z+ez/reach*rz;
+    }
+  }
   if (Math.hypot(player.vx,player.vz) > .25) {
     const heading = Math.atan2(player.vx,player.vz);
     const difference = Math.atan2(Math.sin(heading-player.heading),Math.cos(heading-player.heading));
@@ -341,6 +366,7 @@ function frame(now) {
   if(cooking)updateCooking(now);
   else if(!menuOpen())move(now,dt);
   if(player.space!=='cottage')player.space=onFarmIsland(player)?'farm':'outdoor';
+  if(decor.active&&player.space!=='cottage')decor.exit();
   const wallTime=Date.now();
   life.tick(wallTime);
   const quest = activeQuest();
@@ -366,7 +392,7 @@ function frame(now) {
   areaAction.hidden=!here;
   areaAction.disabled=Boolean(here?.disabled);
   if(here&&areaAction.textContent!==here.label)areaAction.textContent=here.label;
-  const region = player.space==='farm'?'Sunpetal Farm Island':player.space==='cottage'?'Sunpetal Cottage'
+  const region = player.space==='farm'?'Pearl Reef Sanctuary':player.space==='cottage'?'Sunpetal Cottage'
     :player.x < -5 ? 'Sunpetal Homebase' : player.x > 8 ? (player.z < -3.3 ? 'Glassfin Grotto' : 'Moonlace Reef') : 'Luma’s Current';
   if (location.textContent !== region) location.textContent = region;
   document.body.dataset.questStep = String(step);
@@ -394,6 +420,7 @@ function frame(now) {
 }
 
 function selectWorldPoint(event){
+  if(decor.active){decor.tap(event);return;}
   if (current || cooking || menuOpen()) return;
   const farmBed=view.pickFarmBed?.(event.clientX,event.clientY)??-1;
   if(farmBed>=0){
@@ -464,7 +491,7 @@ function bindCanvas(canvas) {
     return Math.hypot(first.x-second.x,first.y-second.y);
   }
   canvas.addEventListener('pointerdown',event=>{
-    if(!view||cooking||menuOpen()||event.button!==0||pointers.size>=2) return;
+    if(!view||cooking||(menuOpen()&&!decor.active)||event.button!==0||pointers.size>=2) return;
     if(!pointers.size) cameraGesture=false;
     pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
     if(pointers.size===2) cameraGesture=true;
@@ -498,7 +525,7 @@ function bindCanvas(canvas) {
   canvas.addEventListener('pointercancel',event=>endPointer(event,false));
   canvas.addEventListener('lostpointercapture',event=>endPointer(event,false));
   canvas.addEventListener('wheel',event=>{
-    if(!view||cooking||menuOpen()||event.ctrlKey||event.metaKey) return;
+    if(!view||cooking||(menuOpen()&&!decor.active)||event.ctrlKey||event.metaKey) return;
     event.preventDefault();
     const unit=event.deltaMode===1?16:event.deltaMode===2?canvas.clientHeight:1;
     view.zoomCamera(Math.exp(clamp(event.deltaY*unit*.00165,-1,1)));
@@ -552,11 +579,13 @@ export function startReef({safeMode=false}={}) {
     return;
   }
   lifeState.quality=quality;
+  view.setFurniture?.(life.home,life.selected);
   document.querySelector('#low-graphics').checked=quality==='low';
   if(openFarmOnStart){
     openFarmOnStart=false;
     changeSpace('farm',farmIsland.arrival,-Math.PI/2);
   }
+  if(new URLSearchParams(window.location.search).get('area')==='cottage')changeSpace('cottage',cottageRoom.arrival,Math.PI);
   bindCanvas(canvas);
   updateQuest();
   firstFrame=true;

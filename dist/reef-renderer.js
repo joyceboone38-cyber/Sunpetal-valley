@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.min.js';
+import { glam } from './reef-glam.js'; // [sunpetal-glam]
 
 // Keep the grade and selective glow in the 3D canvas so the interface stays crisp.
 export function createReefRenderer(canvas, {quality='high',simpleGraphics=false}={}) {
@@ -10,7 +11,7 @@ export function createReefRenderer(canvas, {quality='high',simpleGraphics=false}
   let width=1,height=1;
   renderer.setPixelRatio(pixelRatio);
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.11;
+  renderer.toneMappingExposure = 1.11+.10*glam;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = T.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;
@@ -66,7 +67,7 @@ export function createReefRenderer(canvas, {quality='high',simpleGraphics=false}
           texture2D(sceneColor,vUv+pixel*vec2(-1.,1.)).rgb+
           texture2D(sceneColor,vUv+pixel*vec2(1.,1.)).rgb)*.25;
         float peak=max(max(c.r,c.g),c.b);
-        gl_FragColor=vec4(min(c,vec3(4.))*smoothstep(1.03,2.6,peak),1.);
+        gl_FragColor=vec4(min(c,vec3(4.))*smoothstep(${(1.03-.2*glam).toFixed(3)},2.6,peak),1.);
       }
     `
   });
@@ -88,10 +89,10 @@ export function createReefRenderer(canvas, {quality='high',simpleGraphics=false}
         }
         float luma=dot(color,vec3(.2126,.7152,.0722));
         float shadows=1.-smoothstep(.015,.45,luma);
-        float saturation=1.06+.13*(1.-smoothstep(.35,1.15,luma));
+        float saturation=1.06+${(.26*glam).toFixed(3)}+.13*(1.-smoothstep(.35,1.15,luma));
         color=max(vec3(0.),mix(vec3(luma),color,saturation));
-        color*=mix(vec3(1.0),vec3(.93,.98,1.08),shadows);
-        color+=bloom*.095;
+        color*=mix(vec3(1.0),mix(vec3(.93,.98,1.08),vec3(1.06,.90,1.14),${glam.toFixed(3)}),shadows);
+        color+=bloom*${(.095+.12*glam).toFixed(3)}*mix(vec3(1.),vec3(1.12,.80,1.18),${glam.toFixed(3)});
         vec2 edge=(vUv-.5)*2.;
         color*=1.-.09*smoothstep(.48,1.85,dot(edge,edge));
         gl_FragColor=vec4(color,1.);

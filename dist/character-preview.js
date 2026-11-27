@@ -8,10 +8,7 @@ import { makeReefGaits } from './character-gait.js';
 import { prepareCharacterExpression } from './character-expression.js';
 
 const models = [
-  ['Blossom-Fairy', 'Blossom Fairy'],
-  ['Tideglass-Witch', 'Tideglass Witch'],
-  ['Ponytail-Fashion-Avatar', 'Ponytail Avatar'],
-  ['Starwing-Fairy', 'Starwing Fairy']
+  ['Sea-Fairy', 'Sea Fairy']
 ];
 const canvas = document.querySelector('#preview');
 const status = document.querySelector('#status');
