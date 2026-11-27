@@ -14,6 +14,7 @@ import { buildFarmIsland,buildCottageRoom } from './reef-homestead.js';
 import { createFurniture } from './reef-furniture.js'; // [sunpetal-shop]
 import { createJuice } from './reef-juice.js';
 import { createProps } from './reef-props.js';
+import { installSanctuary, clearOldHome, groundAt } from './reef-sanctuary.js';
 
 const tau = Math.PI*2;
 const material = (color, options = {}) => new T.MeshStandardMaterial({ color, roughness: .82, ...options });
@@ -125,6 +126,8 @@ export function createReef(canvas, places) {
   }
 
   const waterTime={value:0};
+  // Everything added from here until Luma is old homebase or reef dressing; see clearOldHome.
+  const beforeDressing=new Set(scene.children);
   growCoastalCover(scene,waterTime);
   const effects={value:quality==='low'?.45:1};
   const causticGLSL=`
@@ -324,7 +327,8 @@ export function createReef(canvas, places) {
       normals.setXYZ(last,firstNormal.x,firstNormal.y,firstNormal.z);
     }
     const rimMaterial=material(x<0?'#dfc7f3':'#afa7e7',{vertexColors:true,roughness:.77,metalness:.08});
-    mesh(scene,edge,rimMaterial,x,0,z).receiveShadow=true;
+    const rimMesh=mesh(scene,edge,rimMaterial,x,0,z);
+    rimMesh.receiveShadow=true;
     const shelfMaterial=materials.limestone(palette);
     shelfMaterial.roughness=x<0?.90:.77;
     shelfMaterial.normalScale.setScalar(x<0?.71:.92);
@@ -333,8 +337,9 @@ export function createReef(canvas, places) {
     surface.receiveShadow=true;
     // Preserve the random sequence used by the other scene assets.
     for(let i=0;i<288;i++) random();
+    return [rimMesh,surface];
   }
-  island(-12,1,8.5,7.2,'#b38c8d',.24);
+  const oldHomeGround=island(-12,1,8.5,7.2,'#b38c8d',.24);
   island(13,-2,7.3,6.0,'#3b3e65',1.16);
 
   const tileMats=['#d4b296','#e0b7b0','#ccaaa5','#e3bda1','#c3a3b7'].map(c=>lightRipples(materials.limestone(c),.32));
@@ -430,7 +435,7 @@ export function createReef(canvas, places) {
   }
 
   const home = buildOpalCottage();
-  home.position.set(cottage.x,.13,cottage.z);
+  home.position.set(cottage.x,.13+groundAt(cottage.x,cottage.z),cottage.z);
   scene.add(home);
 
   function gardenOutline(width,depth,curve){
@@ -899,6 +904,7 @@ export function createReef(canvas, places) {
       yaw:x*.28,scale:[2.6,2.43,2.57]});
   }
 
+  const oldDressing=scene.children.filter(object=>!beforeDressing.has(object));
   const {creature:luma,animate:animateLuma,emote:emoteLuma}=buildLuma();
   const tendRing=mesh(scene,new T.TorusGeometry(.66,.018,8,40),cyan);
   tendRing.rotation.x=-Math.PI/2;
@@ -1035,7 +1041,7 @@ export function createReef(canvas, places) {
   const ripple=mesh(fountain,new T.TorusGeometry(1,.013,6,32),glow('#52bedb'),0,.839,0);
   ripple.rotation.x=Math.PI/2;
   const pads=displaySpots.map(spot=>{
-    const pad=mesh(scene,new T.TorusGeometry(.77,.027,7,28),cyan,spot.x,.075,spot.z);
+    const pad=mesh(scene,new T.TorusGeometry(.77,.027,7,28),cyan,spot.x,.075+groundAt(spot.x,spot.z),spot.z);
     pad.rotation.x=Math.PI/2;
     return pad;
   });
@@ -1135,9 +1141,16 @@ export function createReef(canvas, places) {
   }
   const cottageArea=buildCottageRoom(scene,places,materials,kitchen,wardrobe);
   const furniture=createFurniture(cottageArea);
-  halo(scene,places.cottageDoor.x,.18,places.cottageDoor.z,.55,haloMaterials.amber);
+  halo(scene,places.cottageDoor.x,.18+groundAt(places.cottageDoor.x,places.cottageDoor.z),places.cottageDoor.z,.55,haloMaterials.amber);
   const staticArt=typeof document==='undefined'?null:createStaticReefAssets();
   const environment=staticArt?loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,landing},places,renderer,staticArt.load):null;
+  // The sanctuary brings its own coral and kelp, so the old homebase gets none.
+  for(const list of [artFallbacks.coral.home,artFallbacks.kelp.home]) list.length=0;
+  const sanctuary=staticArt?installSanctuary(scene,staticArt.load):null;
+  for(const object of oldHomeGround) object.visible=false;
+  landing.visible=false;
+  clearOldHome(oldDressing,new Set([home,flowers,kelp,crafted,homeStations,marker,seed,tideglass,pearlPickup.shell,grottoSeed,glassfin]),
+    [{...station,radius:1.3}]);
   const regionalArt=staticArt?createRegionalArt(scene,staticArt.load,waterTime,artFallbacks,renderer):null;
   let lastArea,lastSpace;
   const avatar=places.playerOutfit&&!review?createAvatar(scene):null;
@@ -1160,7 +1173,7 @@ export function createReef(canvas, places) {
       }
     });
   }
-  let viewWidth=0,viewHeight=0;
+  let viewWidth=0,viewHeight=0,standing=0;
   let channelFraming=0;
   let lumaFollow=0;
   let fitting=false,fittingBlend=0,cookingBlend=0;
@@ -1196,6 +1209,7 @@ export function createReef(canvas, places) {
     }
     const t=reduceMotion?0:time;
     waterTime.value=t;
+    sanctuary?.update(t,canvas.height);
     const space=player.space??'outdoor';
     const inCottage=space==='cottage';
     if(inCottage!==(lastSpace==='cottage')||lastSpace===undefined&&space==='farm'){
@@ -1246,8 +1260,8 @@ export function createReef(canvas, places) {
     focus.x+=(player.x+lookAhead-homeFraming*.9-focus.x)*smoothing;
     focus.z+=(player.z-1.8-homeFraming*1.65+player.vz*.18-channelFraming*1.65-focus.z)*smoothing;
     const tight=camera.aspect<.9?1.27:1;
-    camera.position.set(focus.x,(8.5-3.15*channelFraming)*tight,focus.z+(12.9-1.3*channelFraming)*tight);
-    aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21,focus.z);
+    camera.position.set(focus.x,(8.5-3.15*channelFraming)*tight+standing,focus.z+(12.9-1.3*channelFraming)*tight);
+    aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21+standing,focus.z);
     if(farmFraming>0){
       const position=places.farmIsland;
       const farmX=T.MathUtils.lerp(position.x,focus.x,camera.aspect<.9?.70:.29);
@@ -1295,7 +1309,7 @@ export function createReef(canvas, places) {
       blade.rotation.x=Math.sin(t*.71+phase)*.042;
     }
     marker.visible=Boolean(quest)&&!current;
-    if(quest) marker.position.set(quest.x,.23,quest.z);
+    if(quest) marker.position.set(quest.x,.23+groundAt(quest.x,quest.z),quest.z);
     star.position.y=1.0+Math.sin(t*3)*.13;star.rotation.y=t*1.6;
     seed.visible=step===2;seed.rotation.y=t;
     pearlPickup.shell.visible=!review&&step>=2&&!style.pearlFound;
@@ -1315,7 +1329,7 @@ export function createReef(canvas, places) {
       const spot=displaySpots[display];
       fountainPrism.rotation.y=t*.91;
       ripple.scale.setScalar(.14+(t*.47%1)*.52);
-      fountain.position.set(spot.x,0,spot.z);
+      fountain.position.set(spot.x,groundAt(spot.x,spot.z),spot.z);
       for(let i=0;i<droplets.length;i++){
         const angle=Math.floor(i/3)/5*tau;
         const phase=(t*.86+i%3/3)%1;
@@ -1366,7 +1380,9 @@ export function createReef(canvas, places) {
     props?.update(t);
     juice.update(dt,{reduce:reduceMotion,viewHeight:height,fov:camera.fov});
     furniture.tick(dt);
-    character.position.set(player.x,.28+Math.sin(t*3.4)*.06+(current?Math.sin(t*5)*.12+.24:0),player.z);
+    const ground=inCottage?0:groundAt(player.x,player.z);
+    standing+=(ground-standing)*(1-Math.exp(-dt*14));
+    character.position.set(player.x,standing+.28+Math.sin(t*3.4)*.06+(current?Math.sin(t*5)*.12+.24:0),player.z);
     character.rotation.y=player.heading;
     const swim=Math.min(1,Math.hypot(player.vx,player.vz)/6);
     body.rotation.x=-.12-swim*.38;
@@ -1427,8 +1443,18 @@ export function createReef(canvas, places) {
     pickRay.setFromCamera(new T.Vector2((x-rect.left)/rect.width*2-1,1-(y-rect.top)/rect.height*2),camera);
     return pickRay;
   }
+  // Taps land on the sanctuary's raised plaza, stairs and pools, not just a flat y=0 plane.
+  const pickHigh=new T.Plane(new T.Vector3(0,1,0),-1.3),pickLow=new T.Plane(new T.Vector3(0,1,0),.7);
   function pick(x,y){
-    return screenRay(x,y).ray.intersectPlane(plane,new T.Vector3());
+    const ray=screenRay(x,y).ray;
+    const top=ray.intersectPlane(pickHigh,new T.Vector3()),bottom=ray.intersectPlane(pickLow,new T.Vector3());
+    if(!top||!bottom) return ray.intersectPlane(plane,new T.Vector3());
+    const point=new T.Vector3();
+    for(let i=0;i<=80;i++){
+      point.lerpVectors(top,bottom,i/80);
+      if(point.y<=groundAt(point.x,point.z)) return point;
+    }
+    return ray.intersectPlane(plane,new T.Vector3());
   }
   const bedHit=new T.Vector3();
   function pickFarmBed(x,y){

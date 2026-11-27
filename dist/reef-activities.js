@@ -139,8 +139,8 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   let section='Wardrobe',outfitRequest=0,noticeTimer,selectedUid='';
   let lumaButton;
   const landmarks=[
-    {id:'shell',name:'Waterfall Shell Cottage',point:{x:-13.1,z:.21},hint:'Sunpetal Homebase'},
-    {id:'pool',name:'Pearl Tidepool',point:{x:-7.5,z:1.65},hint:'Sunpetal Homebase'},
+    {id:'shell',name:'Seashell Cottage',point:{x:-12,z:-.9},hint:'Pearl Reef Sanctuary'},
+    {id:'pool',name:'Pearl Tidepool',point:{x:-12,z:4.7},hint:'Pearl Reef Sanctuary'},
     {id:'shelf',name:'Moonlace Shelf',point:layout.shelf,hint:'Moonlace Reef'},
     {id:'grotto',name:'Glassfin Grotto',point:layout.grotto,hint:'Moonlace Reef'}
   ];

@@ -1,5 +1,7 @@
-const farm = { x: -12, z: 4.2 };
-const cottage = { x: -13, z: -3 };
+// Home is the Pearl Reef Sanctuary island (see reef-sanctuary.js), centred at x -12, z 1.
+// Story beds sit on its brown garden tiles; the cottage sits on its raised back plaza.
+const farm = { x: -17.98, z: -1.3 };
+const cottage = { x: -12, z: -4.9 };
 const cottageLanding = { x: -12.68, z: 1.40 };
 const jelly = { x: -0.5, z: 1.4 };
 const shelf = { x: 13, z: -1.5 };
@@ -7,12 +9,12 @@ const moonlacePearl = { x: 14.9, z: -2.88 };
 const station = { x: -17.4, z: 3.8 };
 const grotto = { x: 16.6, z: -5.2 };
 const glass = { x: 9.45, z: -4.6 };
-const secondBed = { x: farm.x-2.6, z: farm.z+1.8 };
+const secondBed = { x: -15.68, z: .27 };
 const wardrobe = { x: -114.60, z: -1.93 };
 const kitchen = { x: -112, z: -2.25 };
-const nook = { x: -16.65, z: -.47 };
-const cottageDoor = { x: -13.0, z: -.72 };
-const farmDock = { x: -19.06, z: 4.91 };
+const nook = { x: -7.6, z: -1.6 };
+const cottageDoor = { x: -12.0, z: -2.05 };
+const farmDock = { x: -19.7, z: 4.91 };
 const farmWest = -33.95;
 const farmIsland = {
   x:farmWest,z:3.45,
@@ -39,12 +41,12 @@ const stalls={
   sell:{x:farmIsland.x+4.5,z:farmIsland.z-4.35,stand:{x:farmIsland.x+4.5,z:farmIsland.z-2.95},name:'Sell Stall'}
 };
 const travelLandings = {
-  home: { x: -8.9, z: 6.2 },
+  home: { x: -7.2, z: 1.2 },
   reef: { x: 12, z: -1.5 }
 };
 const displaySpots = [
-  { x: -12.1, z: -.45, name: 'Cottage steps' },
-  { x: -10.15, z: 6.55, name: 'Garden overlook' }
+  { x: -8.8, z: .8, name: 'Cottage steps' },
+  { x: -6.6, z: 3.4, name: 'Garden overlook' }
 ];
 
 export const reefLayout = {

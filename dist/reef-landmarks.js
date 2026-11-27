@@ -1,4 +1,5 @@
 import * as T from './vendor/three.module.min.js';
+import { groundAt } from './reef-sanctuary.js';
 
 const full=Math.PI*2;
 function shape(parent,geometry,material,x=0,y=0,z=0) {
@@ -192,13 +193,14 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
   };
   attach('seashell cottage','seashell-cottage.glb',({scene:asset})=>{
     asset.name='Pastel Seashell Cottage';
-    const scale=6.4;
+    const scale=6.0;
     asset.scale.setScalar(scale);
     // The model faces +Z. Its front, awning included, stops just short of the door point.
+    // It stands on the sanctuary's raised back plaza.
     const bounds=new T.Box3().setFromObject(asset,true);
     const center=bounds.getCenter(new T.Vector3());
     if(bounds.isEmpty()) throw new Error('Invalid cottage bounds');
-    asset.position.set(places.cottage.x-center.x,.061-bounds.min.y,places.cottageDoor.z-.35-bounds.max.z);
+    asset.position.set(places.cottage.x-center.x,.061-bounds.min.y+groundAt(places.cottage.x,places.cottage.z),places.cottageDoor.z-.35-bounds.max.z);
     asset.traverse(object=>{
       if(!object.isMesh||object.material.transparent) return;
       object.castShadow=true;
@@ -301,9 +303,6 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
       });
     });
   }
-  cluster('shell.glb','Courtyard shells',{
-    home:[[-15.8,.033,-.65,2.3,.11]]
-  },'#f3c9e8');
   cluster('coral.glb','Coral fans',{
     reef:[[7.83,.03,-3.99,4.1,1.3],[10.85,.10,-6.03,5.4,-.28],[15.1,.04,2.2,3.7,.92],[18.13,.04,-3.47,3.5,-.40],[19.1,-.35,-5.3,4.55,.39]]
   },'#e6acee');

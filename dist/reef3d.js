@@ -58,7 +58,7 @@ try {
   if (step === quests.length && ['0', '1'].includes(savedSpot)) display = Number(savedSpot);
 } catch {}
 
-const player = { x: -9, z: 7, vx: 0, vz: 0, heading: .9, space:'outdoor' };
+const player = { x: reefLayout.travelLandings.home.x, z: reefLayout.travelLandings.home.z, vx: 0, vz: 0, heading: .9, space:'outdoor' };
 const cookingPoint={x:kitchen.x-.22,z:kitchen.z+1.02,space:'cottage'};
 const wardrobePoint={x:wardrobe.x+.18,z:wardrobe.z+1.08,space:'cottage'};
 const keys = new Set();
@@ -439,7 +439,8 @@ function selectWorldPoint(event){
   const point = view.pick(event.clientX,event.clientY);
   if (!point) return;
   if(player.space==='cottage'&&distance(point,kitchen)<1.05){goToCottagePoint(cookingPoint,()=>life.show('Kitchen'));return;}
-  if(player.space==='outdoor'&&distance(point,cottageDoor)<.78){walkTo(cottageDoor,openCottage);return;}
+  // Tapping the door, or anywhere on the cottage up on the plaza, goes inside.
+  if(player.space==='outdoor'&&(distance(point,cottageDoor)<.78||distance(point,reefLayout.cottage)<2.7)){walkTo(cottageDoor,openCottage);return;}
   if(player.space==='outdoor'&&distance(point,farmDock)<.82){walkTo(farmDock,openFarm);return;}
   if (player.space==='outdoor'&&step === quests.length) {
     const nearest = displaySpots.findIndex(spot => distance(spot,point) < 1.2 && spot !== displaySpots[display]);
