@@ -426,6 +426,78 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
     update();
   }
 
+  // Tapping a dug plot with more than one kind of seed asks which one goes in it.
+  // New crops show up here on their own: they only need an entry in reef-crops.js.
+  let seedPicker;
+  function closeSeedPicker() {
+    seedPicker?.remove();
+    seedPicker=undefined;
+  }
+  function openSeedPicker(index,owned) {
+    closeSeedPicker();
+    const box=document.createElement('div');
+    box.id='seed-picker';
+    box.setAttribute('role','dialog');
+    box.setAttribute('aria-label','Choose a seed');
+    Object.assign(box.style,{position:'fixed',left:'50%',bottom:'max(86px,env(safe-area-inset-bottom))',transform:'translateX(-50%)',
+      zIndex:'40',width:'min(92vw,360px)',maxHeight:'55vh',overflowY:'auto',padding:'10px',borderRadius:'18px',
+      background:'linear-gradient(180deg,#5b2c86f2,#3a1a63f2)',border:'1px solid #ffc6f2aa',boxShadow:'0 10px 30px #0008',
+      color:'#fff',font:'600 14px system-ui,sans-serif'});
+    const title=document.createElement('div');
+    title.textContent='Plant which seed here?';
+    Object.assign(title.style,{padding:'2px 6px 8px',fontWeight:'800',fontSize:'15px'});
+    box.append(title);
+    for(const crop of owned){
+      const row=document.createElement('button');
+      row.type='button';
+      Object.assign(row.style,{display:'flex',alignItems:'center',gap:'10px',width:'100%',margin:'0 0 6px',padding:'8px 10px',
+        borderRadius:'14px',border:'1px solid #ffffff55',background:'#ffffff18',color:'#fff',font:'inherit',textAlign:'left',cursor:'pointer'});
+      const dot=document.createElement('span');
+      Object.assign(dot.style,{flex:'none',width:'26px',height:'26px',borderRadius:'50%',background:crop.bloom,border:'3px solid '+crop.leaf});
+      const text=document.createElement('span');
+      text.style.flex='1';
+      text.textContent=crop.label+'  x'+state.seeds[crop.id];
+      const detail=document.createElement('small');
+      detail.style.display='block';
+      detail.style.opacity='.8';
+      detail.textContent=describeTime(crop.seconds*1000)+' · '+crop.waters+(crop.waters>1?' waterings':' watering')+' · sells '+crop.price;
+      text.append(detail);
+      row.append(dot,text);
+      row.addEventListener('click',event=>{
+        event.stopPropagation();
+        state.seedPick=crop.id;
+        closeSeedPicker();
+        plantHere(index);
+      });
+      box.append(row);
+    }
+    const more=document.createElement('button');
+    more.type='button';
+    more.textContent='Get more seeds';
+    Object.assign(more.style,{width:'48%',padding:'8px',borderRadius:'12px',border:'1px solid #ffffff44',background:'transparent',color:'#fff',font:'inherit',cursor:'pointer',marginRight:'4%'});
+    more.addEventListener('click',()=>{closeSeedPicker();goToStall('seeds');});
+    const cancel=document.createElement('button');
+    cancel.type='button';
+    cancel.textContent='Cancel';
+    Object.assign(cancel.style,{width:'48%',padding:'8px',borderRadius:'12px',border:'1px solid #ffffff44',background:'transparent',color:'#fff',font:'inherit',cursor:'pointer'});
+    cancel.addEventListener('click',closeSeedPicker);
+    box.append(more,cancel);
+    document.body.append(box);
+    seedPicker=box;
+  }
+  function plantHere(index) {
+    if(!farmAt()||tileDistance(index)>=reach+.35)return;
+    const at=Date.now();
+    if(stageOf(index,at)!==1)return;
+    const message=work([index],at);
+    if(!message)return;
+    celebrateTile(index,1,message);
+    store();
+    report(message);
+    note.textContent=message;
+    update();
+  }
+
   function useBed(index) {
     const now=Date.now();
     const run=()=>{
@@ -433,6 +505,10 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
       const at=Date.now();
       const stage=stageOf(index,at);
       if(stage===1&&!currentSeed()){goToStall('seeds');report('Buy seeds in the Market tab.');return;}
+      if(stage===1){
+        const owned=crops.filter(crop=>state.seeds[crop.id]>0);
+        if(owned.length>1){openSeedPicker(index,owned);return;}
+      }
       if(stage===3){report('Growing · '+describeTime(state.plots[index].until-at));return;}
       if(pendingTend(index,at)){report('Luma is on it.');return;}
       const message=work([index],at);
@@ -911,6 +987,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   }
 
   function update(){
+    if(!farmAt())closeSeedPicker();
     if(!panel.open)return;
     [...buttons.children].forEach((button,index)=>{
       button.setAttribute('aria-pressed',String(tabs[index]===section));

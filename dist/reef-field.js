@@ -56,6 +56,17 @@ export function createField(parent,plots,origin,options={}) {
   seatGeometry.rotateX(-pi/2);
   const petalMark=new T.SphereGeometry(1,10,6);
   const studGeometry=new T.SphereGeometry(.045,10,8);
+  const wetTile=new T.MeshStandardMaterial({color:'#3f2218',roughness:.55});
+  const glowGeometry=new T.CircleGeometry(.62,32);
+  glowGeometry.rotateX(-pi/2);
+  const bit=new T.SphereGeometry(1,8,6);
+  const puffMaterials={
+    dig:new T.MeshStandardMaterial({color:'#8a5a40',roughness:.95}),
+    plant:new T.MeshBasicMaterial({color:'#ffd6f5'}),
+    water:new T.MeshBasicMaterial({color:'#9fe8ff',transparent:true,opacity:.95}),
+    harvest:new T.MeshBasicMaterial({color:'#ffe08a'})
+  };
+  const bits=[];
   const furrow=new T.MeshStandardMaterial({color:'#cc7a9c',roughness:.98});
   const soil=new T.MeshStandardMaterial({color:'#6e3447',roughness:.95});
   const soilWet=new T.MeshStandardMaterial({color:'#4f2338',roughness:.8});
@@ -91,7 +102,8 @@ export function createField(parent,plots,origin,options={}) {
       }
     }else{
       // Every plot gets the same rich soil tile, with a gold ring, pearl petals and corner studs.
-      const tile=new T.Mesh(tileGeometry,addedTile);
+      var tileMesh=new T.Mesh(tileGeometry,addedTile);
+      const tile=tileMesh;
       tile.scale.set(1.04,.5,1.04);
       tile.position.y=top-.06;
       tile.receiveShadow=true;
@@ -121,6 +133,10 @@ export function createField(parent,plots,origin,options={}) {
         marker.add(stud);
       }
       root.add(marker);
+      var ripeGlow=new T.Mesh(glowGeometry,new T.MeshBasicMaterial({color:'#ffe9a8',transparent:true,opacity:0,blending:T.AdditiveBlending,depthWrite:false}));
+      ripeGlow.position.y=top+.02;
+      ripeGlow.visible=false;
+      root.add(ripeGlow);
     }
     const hole=new T.Group();
     const dirt=new T.Mesh(holeGeometry,soil);
@@ -173,7 +189,7 @@ export function createField(parent,plots,origin,options={}) {
     drop.scale.setScalar(1.7);
     drop.visible=false;
     root.add(drop);
-    return {root,hole,dirt,plant,stem,leaves,blades,bloom,drop,shown:undefined,pop:undefined,crop:undefined};
+    return {root,hole,dirt,plant,stem,leaves,blades,bloom,drop,tileMesh:overlay?tileMesh:undefined,ripeGlow:overlay?ripeGlow:undefined,shown:undefined,pop:undefined,crop:undefined};
   });
 
   function buildBloom(tile,crop) {
@@ -205,7 +221,25 @@ export function createField(parent,plots,origin,options={}) {
     }
   }
 
+  function burst(tile,kind,color) {
+    const count=kind==='harvest'?14:kind==='water'?10:8;
+    for(let i=0;i<count;i++){
+      const material=kind==='harvest'&&i%2&&color?cropMaterials.get(color)?.bloom??puffMaterials.harvest:puffMaterials[kind];
+      const mesh=new T.Mesh(bit,material);
+      const size=(kind==='water'?.035:.04)+Math.random()*.03;
+      mesh.scale.setScalar(size);
+      const angle=Math.random()*pi*2,out=.25+Math.random()*.5;
+      mesh.position.set(Math.cos(angle)*.1,top+.08,Math.sin(angle)*.1);
+      tile.root.add(mesh);
+      const up=kind==='water'?-.2:kind==='dig'?1.1+Math.random()*.6:1.6+Math.random()*1;
+      bits.push({mesh,tile,vx:Math.cos(angle)*out,vy:kind==='water'?-.2:up,vz:Math.sin(angle)*out,life:0,max:.7+Math.random()*.35,from:kind==='water'?.85:0});
+      if(kind==='water')mesh.position.y=top+.85+Math.random()*.1;
+    }
+  }
+
   function apply(tile,{s,c,p}) {
+    if(tile.tileMesh)tile.tileMesh.material=s===3?wetTile:addedTile;
+    if(tile.ripeGlow)tile.ripeGlow.visible=s===4;
     const crop=cropById[c];
     tile.hole.visible=s>=1;
     tile.dirt.material=s>=3?soilWet:soil;
@@ -243,9 +277,32 @@ export function createField(parent,plots,origin,options={}) {
         state[index]=key;
         apply(tile,value);
         if(!first&&before!==String(value.s)&&value.s>0)tile.pop=0;
+        if(!first&&before!==String(value.s)&&overlay){
+          const was=Number(before),now=value.s;
+          if(now===1&&was===0)burst(tile,'dig');
+          else if(now===1&&was===4)burst(tile,'harvest',tile.crop);
+          else if(now===2&&was===1)burst(tile,'plant');
+          else if(now===3&&was===2)burst(tile,'water');
+        }
       });
     },
     tick(dt,time=0) {
+      for(let i=bits.length-1;i>=0;i--){
+        const b=bits[i];
+        b.life+=dt;
+        const u=b.life/b.max;
+        if(u>=1){b.mesh.removeFromParent();bits.splice(i,1);continue;}
+        b.vy-=(b.from?2.2:3.4)*dt;
+        b.mesh.position.x+=b.vx*dt*.5;
+        b.mesh.position.y+=b.vy*dt*.5;
+        b.mesh.position.z+=b.vz*dt*.5;
+        b.mesh.scale.multiplyScalar(1-dt*.9);
+      }
+      tiles.forEach((tile,index)=>{
+        if(tile.ripeGlow?.visible){
+          tile.ripeGlow.material.opacity=.34+.16*Math.sin(time*2.6+index*.9);
+        }
+      });
       tiles.forEach((tile,index)=>{
         if(tile.drop.visible)tile.drop.position.y=top+.82+Math.sin(time*3+index)*.06;
         if(tile.pop===undefined)return;

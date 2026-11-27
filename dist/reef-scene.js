@@ -1252,7 +1252,7 @@ export function createReef(canvas, places) {
     aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21,focus.z);
     if(farmFraming>0){
       const position=places.farmIsland;
-      const farmX=T.MathUtils.lerp(position.x-2.2,focus.x,camera.aspect<.9?.32:.22);
+      const farmX=T.MathUtils.lerp(position.x-3.2,focus.x,camera.aspect<.9?.1:.2);
       const farmZ=T.MathUtils.lerp(position.z,focus.z,.42);
       camera.position.set(
         T.MathUtils.lerp(camera.position.x,farmX,farmFraming),

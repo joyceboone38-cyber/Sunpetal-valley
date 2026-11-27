@@ -104,11 +104,13 @@ export function buildFarmIsland(scene,layout,materials){
       const {animateMeshyIsland}=await import('./reef-sanctuary-motion.js');
       state.life=animateMeshyIsland(model,{float:false});
       state.life.setViewHeight(state.viewHeight);
-      // The game's lights are brighter than the model's own preview, so tone it down a touch.
+      // Keep the original pearly pink, lilac and teal: a slight saturation lift and a soft glow.
       model.traverse(object=>{
-        if(!object.isMesh)return;
-        object.material.color.multiplyScalar(.8);
-        object.material.envMapIntensity=.5;
+        if(!object.isMesh||!object.material?.color)return;
+        const hsl={};
+        object.material.color.getHSL(hsl);
+        object.material.color.setHSL(hsl.h,Math.min(1,hsl.s*1.15),hsl.l*.94);
+        object.material.envMapIntensity=.75;
       });
     }catch(error){
       // The island still shows without its motion.
