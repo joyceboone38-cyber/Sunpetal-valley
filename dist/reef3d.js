@@ -342,16 +342,6 @@ function move(now, dt) {
   const bounds=player.space==='cottage'?cottageRoom.bounds:outdoorBounds;
   player.x = clamp(player.x+player.vx*dt,bounds.left,bounds.right);
   player.z = clamp(player.z+player.vz*dt,bounds.back,bounds.front);
-  if(player.space==='farm'){
-    // Keep the player on the island's flat top, inside the coral rim.
-    const {rx,rz}=farmIsland.ellipse;
-    const ex=(player.x-farmIsland.x)/rx,ez=(player.z-farmIsland.z)/rz;
-    const reach=Math.hypot(ex,ez);
-    if(reach>1){
-      player.x=farmIsland.x+ex/reach*rx;
-      player.z=farmIsland.z+ez/reach*rz;
-    }
-  }
   if (Math.hypot(player.vx,player.vz) > .25) {
     const heading = Math.atan2(player.vx,player.vz);
     const difference = Math.atan2(Math.sin(heading-player.heading),Math.cos(heading-player.heading));

@@ -27,6 +27,8 @@ export function createField(parent,plots,origin,options={}) {
   const overlay=Boolean(options.overlay);
   const scale=options.scale??1;
   if(options.surface!==undefined)top=options.surface;
+  // Overlay tiles sit a hair above the model's own tiles so they fully cover them.
+  if(overlay)top=.15;
   const group=new T.Group();
   group.name='Sunpetal sand field';
   parent.add(group);
@@ -42,6 +44,18 @@ export function createField(parent,plots,origin,options={}) {
   const sand=new T.MeshStandardMaterial({color:'#dd86ac',roughness:.97,emissive:'#ff8fb8',emissiveIntensity:.05});
   const sandAlt=new T.MeshStandardMaterial({color:'#d77da5',roughness:.97,emissive:'#ff8fb8',emissiveIntensity:.05});
   const addedTile=new T.MeshStandardMaterial({color:'#7d4f38',roughness:.92});
+  const panelMaterial=new T.MeshStandardMaterial({color:'#6b4130',roughness:.95});
+  const goldMaterial=new T.MeshStandardMaterial({color:'#f0cf7a',roughness:.3,metalness:.65,emissive:'#b8842a',emissiveIntensity:.25});
+  const pearlMaterial=new T.MeshStandardMaterial({color:'#fbe3ff',roughness:.3,emissive:'#e9b6ff',emissiveIntensity:.35});
+  const seatMaterial=new T.MeshStandardMaterial({color:'#5a3426',roughness:.97});
+  const panelGeometry=new T.ExtrudeGeometry(roundedSquare(half*1.62,.2),{depth:.01,bevelEnabled:false,curveSegments:8});
+  panelGeometry.rotateX(-pi/2);
+  const ringGeometry=new T.TorusGeometry(.5,.022,8,40);
+  ringGeometry.rotateX(pi/2);
+  const seatGeometry=new T.CircleGeometry(.47,32);
+  seatGeometry.rotateX(-pi/2);
+  const petalMark=new T.SphereGeometry(1,10,6);
+  const studGeometry=new T.SphereGeometry(.045,10,8);
   const furrow=new T.MeshStandardMaterial({color:'#cc7a9c',roughness:.98});
   const soil=new T.MeshStandardMaterial({color:'#6e3447',roughness:.95});
   const soilWet=new T.MeshStandardMaterial({color:'#4f2338',roughness:.8});
@@ -75,13 +89,38 @@ export function createField(parent,plots,origin,options={}) {
         line.position.set(0,top+.004,z);
         root.add(line);
       }
-    }else if(plot.added){
-      // The model draws 11 tiles; this one matches them.
+    }else{
+      // Every plot gets the same rich soil tile, with a gold ring, pearl petals and corner studs.
       const tile=new T.Mesh(tileGeometry,addedTile);
-      tile.scale.set(1,.5,1);
-      tile.position.y=top-.05;
+      tile.scale.set(1.04,.5,1.04);
+      tile.position.y=top-.06;
       tile.receiveShadow=true;
       root.add(tile);
+      const panel=new T.Mesh(panelGeometry,panelMaterial);
+      panel.position.y=top-.012;
+      root.add(panel);
+      const marker=new T.Group();
+      marker.position.y=top+.004;
+      const seat=new T.Mesh(seatGeometry,seatMaterial);
+      marker.add(seat);
+      const ring=new T.Mesh(ringGeometry,goldMaterial);
+      ring.position.y=.012;
+      marker.add(ring);
+      for(let i=0;i<8;i++){
+        const angle=i*pi/4;
+        const petal=new T.Mesh(petalMark,pearlMaterial);
+        petal.scale.set(.09,.02,.05);
+        petal.position.set(Math.cos(angle)*.64,.008,Math.sin(angle)*.64);
+        petal.rotation.y=-angle;
+        marker.add(petal);
+      }
+      for(const sx of [-1,1])for(const sz of [-1,1]){
+        const stud=new T.Mesh(studGeometry,goldMaterial);
+        stud.scale.y=.5;
+        stud.position.set(sx*.58,.012,sz*.58);
+        marker.add(stud);
+      }
+      root.add(marker);
     }
     const hole=new T.Group();
     const dirt=new T.Mesh(holeGeometry,soil);
