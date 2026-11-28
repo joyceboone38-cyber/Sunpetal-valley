@@ -78,7 +78,7 @@ export function buildFarmIsland(scene,layout,materials){
   group.name='Pearl Reef Sanctuary (farm)';
   group.position.set(farmIsland.x,0,farmIsland.z);
   scene.add(group);
-  const field=createField(group,fieldPlots,farmIsland,{overlay:true,scale:plotScale});
+  const field=createField(group,fieldPlots,farmIsland,{overlay:true,scale:plotScale*farmIsland.scale/16});
   const groundY=.074; // where the plot tops sit in the game world
   const state={life:null,viewHeight:800,time:0,loaded:false};
 

@@ -7,7 +7,16 @@ const raw=Uint8Array.from(atob(encoded),character=>character.charCodeAt(0));
 const heights=new Int16Array(raw.buffer);
 
 // The plaza sits in the world with its model origin at (x,y,z) and this scale.
-export const plazaFrame={x:-9,y:-.505,z:4.2,scale:15};
+// The town is big: scale 24 makes it about 46 metres across. y keeps the hub floor at world height .2.
+export const plazaFrame={x:-17.5,y:-.93,z:4.2,scale:24};
+// The first layout was made at scale 15 around (-9, 4.2). This maps those spots onto the bigger town.
+const firstFrame={x:-9,z:4.2,scale:15};
+export const onPlaza=(x,z)=>{
+  const k=plazaFrame.scale/firstFrame.scale;
+  return {x:+(plazaFrame.x+(x-firstFrame.x)*k).toFixed(2),z:+(plazaFrame.z+(z-firstFrame.z)*k).toFixed(2)};
+};
+// Left edge of the plaza in the world (the model reaches -0.96).
+export const plazaLeft=plazaFrame.x-.96*plazaFrame.scale;
 
 function cellAt(ix,iz){
   if(ix<0||iz<0||ix>=cells||iz>=cells)return empty;
@@ -39,7 +48,7 @@ export function onPlazaFloor(x,z){
 const smooth=(value,low,high)=>{const t=Math.min(1,Math.max(0,(value-low)/(high-low)));return t*t*(3-2*t);};
 export function floorAt(x,z){
   // Beyond the plaza (the Sanctuary crossing in the west, Moonlace Reef in the east) the ground is level.
-  const reach=smooth(x,-24,-20)*(1-smooth(x,3,6));
+  const reach=smooth(x,plazaLeft-4,plazaLeft)*(1-smooth(x,3,6));
   return reach>0?plazaFloor(x,z)*reach:0;
 }
 

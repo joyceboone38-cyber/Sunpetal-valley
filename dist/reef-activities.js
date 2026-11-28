@@ -1,3 +1,4 @@
+import { onPlaza } from './reef-plaza-floor.js';
 import { outfits } from './reef-avatar.js';
 import { reefPosterUrl } from './reef-model-loader.js';
 import { reefLayout } from './reef-layout.js';
@@ -140,7 +141,7 @@ export function connectLife({state,getView,layout,player,walkTo,onOpen,canOpen,c
   let lumaButton;
   const landmarks=[
     {id:'shell',name:'Seashell Cottage',point:layout.cottageLanding,hint:'Sunpetal Plaza'},
-    {id:'pool',name:'Shell Fountain',point:{x:-9.9,z:3.4},hint:'Sunpetal Plaza'},
+    {id:'pool',name:'Shell Fountain',point:onPlaza(-9.9,3.4),hint:'Sunpetal Plaza'},
     {id:'shelf',name:'Moonlace Shelf',point:layout.shelf,hint:'Moonlace Reef'},
     {id:'grotto',name:'Glassfin Grotto',point:layout.grotto,hint:'Moonlace Reef'}
   ];

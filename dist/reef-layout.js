@@ -1,33 +1,33 @@
-import { floorAt, onPlazaFloor } from './reef-plaza-floor.js';
+import { floorAt, onPlazaFloor, onPlaza } from './reef-plaza-floor.js';
 
 // The Underwater Plaza replaced the old Homebase island, so these spots sit on its platforms:
 // the cottage on the north-west one, the crafting table on the north-east one, the two garden
 // beds on the big south platform, and Luma beside Moonlace Reef on the east one.
-const farm = { x: -6.6, z: 8 };
-const cottage = { x: -16.5, z: -4 };
-const cottageLanding = { x: -16.18, z: .4 };
-const jelly = { x: -.2, z: 2.9 };
+const farm = onPlaza(-6.6,8);
+const cottage = onPlaza(-16.5,-4);
+const cottageLanding = onPlaza(-16.18,.4);
+const jelly = onPlaza(-.2,2.9);
 const shelf = { x: 13, z: -1.5 };
 const moonlacePearl = { x: 14.9, z: -2.88 };
-const station = { x: -.4, z: -3.6 };
+const station = onPlaza(-.4,-3.6);
 const grotto = { x: 16.6, z: -5.2 };
 const glass = { x: 9.45, z: -4.6 };
-const secondBed = { x: -3, z: 8.3 };
+const secondBed = onPlaza(-3,8.3);
 const wardrobe = { x: -114.60, z: -1.93 };
 const kitchen = { x: -112, z: -2.25 };
-const nook = { x: -16.8, z: 5 };
-const cottageDoor = { x: -16.5, z: -1.72 };
-const farmDock = { x: -19.6, z: 4.6 };
-const farmWest = -33.95;
+const nook = onPlaza(-16.8,5);
+const cottageDoor = onPlaza(-16.5,-1.72);
+const farmDock = onPlaza(-19.6,4.6);
+const farmWest = -56.5;
 // The Pearl Reef Sanctuary: one Meshy island, scaled by `scale`. Model coordinates times the
 // scale give metres from the island centre (x,z). Plots follow its 4 + 4 + 3 brown tiles.
 const farmIsland = {
-  x:farmWest,z:4.2,scale:16,
-  arrival:{x:-28.9,z:5.0},
-  bounds:{left:farmWest-7.2,right:farmWest+7.2,back:4.2-7.6,front:4.2+7.6},
-  ellipse:{rx:6.4,rz:6.7}
+  x:farmWest,z:4.2,scale:28,
+  arrival:{x:farmWest+8.84,z:5.6},
+  bounds:{left:farmWest-12.6,right:farmWest+12.6,back:4.2-13.3,front:4.2+13.3},
+  ellipse:{rx:11.2,rz:11.7}
 };
-const outdoorBounds={left:farmWest-10.2,right:22,back:-12,front:19.5};
+const outdoorBounds={left:farmWest-17,back:-22,front:29,right:22};
 const onFarmIsland=({x,z})=>{
   const {left,right,back,front}=farmIsland.bounds;
   return x>=left&&x<=right&&z>=back&&z<=front;
@@ -42,15 +42,15 @@ const plotModel=[
 ];
 const fieldPlots=plotModel.map(([mx,mz],index)=>{
   const x=farmIsland.x+mx*farmIsland.scale,z=farmIsland.z+mz*farmIsland.scale;
-  return {x,z,number:index+1,approach:{x,z:z+.62},yaw:plotYaw,added:index===11};
+  return {x,z,number:index+1,approach:{x,z:z+1.08},yaw:plotYaw,added:index===11};
 });
 const travelLandings = {
-  home: { x: -9.9, z: 3 },
+  home: onPlaza(-9.9,3),
   reef: { x: 12, z: -1.5 }
 };
 const displaySpots = [
-  { x: -12.8, z: 1.8, name: 'Fountain steps' },
-  { x: -6.9, z: -6.6, name: 'Garden overlook' }
+  { ...onPlaza(-12.8,1.8), name: 'Fountain steps' },
+  { ...onPlaza(-6.9,-6.6), name: 'Garden overlook' }
 ];
 
 // Joyce is replacing the cottage and the crafting table, so neither is drawn on the plaza for now.

@@ -161,6 +161,7 @@ html.glam a{color:#ffb8ec}
  .location{top:8px;bottom:auto;font-size:.68rem;padding:3px 10px}
  #life-feedback{top:58px;bottom:auto}
 }
+.quest,#interact{display:none!important}
 </style>
 </head>
 <body>

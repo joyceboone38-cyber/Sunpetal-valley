@@ -250,10 +250,7 @@ export function loadEnvironmentArt(scene,{home,wardrobe,kitchen,beds,crafted,lan
   attach('pearl reef kitchen','pearl-reef-kitchen.glb',({scene:asset})=>{
     fitProp(kitchen,asset,'Pearl Reef Kitchen',0,[2,2,2],-.025);
   });
-  attach('shell garden planters','shell-planter.glb',({scene:asset})=>{
-    // The soil surface lands at the same height as the existing crop roots.
-    for(const bed of beds) fitProp(bed,asset.clone(true),'Shell Garden Planter',-Math.PI/2,[1.44,.58,1.35],.014);
-  });
+  // The shell garden planters are removed for now (Joyce did not like them).
 
   function cluster(file,key,placements,tint){
     attach(key,file,({scene:source})=>{

@@ -12,6 +12,7 @@ import { createStaticReefAssets, hasReefModel } from './reef-model-loader.js';
 import { createRegionalArt } from './reef-region-art.js';
 import { buildFarmIsland,buildCottageRoom } from './reef-homestead.js';
 import { buildPlaza } from './reef-plaza.js';
+import { plazaLeft } from './reef-plaza-floor.js';
 import { createFurniture } from './reef-furniture.js'; // [sunpetal-shop]
 import { createJuice } from './reef-juice.js';
 import { createProps } from './reef-props.js';
@@ -246,7 +247,7 @@ export function createReef(canvas, places) {
         col+=vec3(.022,.092,.121)*caustic*visibility*(.25+.48*layers+.22*channel*reach);
         float shelves=min(abs(length((q-vec2(-12.,1.))/vec2(8.5,7.2))-1.),
           abs(length((q-vec2(13.,-2.))/vec2(7.3,6.))-1.));
-        shelves=min(shelves,abs(length((q-vec2(${places.farmIsland.x.toFixed(2)},${places.farmIsland.z.toFixed(2)}))/vec2(7.8,7.8))-1.));
+        shelves=min(shelves,abs(length((q-vec2(${places.farmIsland.x.toFixed(2)},${places.farmIsland.z.toFixed(2)}))/vec2(13.7,13.7))-1.));
         col*=mix(.56,1.,smoothstep(.02,.47,shelves));
         col=mix(vec3(.018,.065,.121),col,.28+.72*visibility);
         gl_FragColor=vec4(col,1.);
@@ -1126,7 +1127,7 @@ export function createReef(canvas, places) {
   const farmArea=buildFarmIsland(scene,places,materials,bed);
   const plaza=buildPlaza(scene);
   const farmBedBoxes=places.fieldPlots.map(({x,z})=>new T.Box3(
-    new T.Vector3(x-.52,-.1,z-.52),new T.Vector3(x+.52,.6,z+.52)
+    new T.Vector3(x-.9,-.1,z-.9),new T.Vector3(x+.9,.9,z+.9)
   ));
   const farmBedGlow=mesh(farmArea.group,new T.TubeGeometry(new T.CatmullRomCurve3(
     gardenOutline(1.0,1.0,.2).getPoints(16).slice(0,-1).map(point=>new T.Vector3(point.x,0,point.y)),true
@@ -1258,9 +1259,10 @@ export function createReef(canvas, places) {
       regionalArt?.ensure(area);
     }
     const depth=T.MathUtils.smoothstep(player.x,0,16);
-    const farmFraming=inCottage?0:T.MathUtils.smoothstep(-player.x,22,29);
+    const fi=places.farmIsland;
+    const farmFraming=inCottage?0:1-T.MathUtils.smoothstep(player.x,fi.x+9,fi.x+21);
     scene.fog.color.copy(nearWater).lerp(deepWater,depth*.82);
-    scene.fog.far=42-depth*6-farmFraming*5;
+    scene.fog.far=42-depth*6+farmFraming*30;
     scene.background.copy(scene.fog.color);
     shafts.visible=quality!=='low';
     environment?.animate(t);
@@ -1284,12 +1286,12 @@ export function createReef(canvas, places) {
     aim.set(focus.x,.55+homeFraming*.36+channelFraming*.21+floorFollow,focus.z);
     if(farmFraming>0){
       const position=places.farmIsland;
-      const farmX=T.MathUtils.lerp(position.x-3.2,focus.x,camera.aspect<.9?.1:.2);
-      const farmZ=T.MathUtils.lerp(position.z,focus.z,.42);
+      const farmX=T.MathUtils.lerp(position.x-5.6,focus.x,camera.aspect<.9?.4:.55);
+      const farmZ=T.MathUtils.lerp(position.z,focus.z,.75);
       camera.position.set(
         T.MathUtils.lerp(camera.position.x,farmX,farmFraming),
-        T.MathUtils.lerp(camera.position.y,12.2*tight,farmFraming),
-        T.MathUtils.lerp(camera.position.z,farmZ+15.2*tight,farmFraming)
+        T.MathUtils.lerp(camera.position.y,15.5*tight,farmFraming),
+        T.MathUtils.lerp(camera.position.z,farmZ+19.5*tight,farmFraming)
       );
       aim.set(T.MathUtils.lerp(aim.x,farmX,farmFraming),T.MathUtils.lerp(aim.y,.44,farmFraming),
         T.MathUtils.lerp(aim.z,farmZ,farmFraming));
@@ -1325,7 +1327,7 @@ export function createReef(canvas, places) {
       blade.rotation.z=Math.sin(t*1.12+phase)*.074;
       blade.rotation.x=Math.sin(t*.71+phase)*.042;
     }
-    marker.visible=Boolean(quest)&&!current;
+    marker.visible=false; // quests are switched off for now
     if(quest) marker.position.set(quest.x,.23+places.floorAt(quest.x,quest.z),quest.z);
     star.position.y=1.0+Math.sin(t*3)*.13;star.rotation.y=t*1.6;
     seed.visible=step===2;seed.rotation.y=t;
@@ -1364,8 +1366,9 @@ export function createReef(canvas, places) {
         mote.scale.setScalar(step===1||current?1:.52);
       }
     }
-    const overPlaza=player.x>=places.farmDock.x-1.9&&player.x<4.5;
-    const inWater=space==='outdoor'&&(overPlaza?!places.onPlazaFloor(player.x,player.z):player.x<places.farmDock.x-1.9||player.x<7.4||Boolean(current))||Boolean(current);
+    if(space!=='farm')plaza.ensureLoaded(); // the town loads once she leaves her Homebase
+    const overPlaza=player.x>=plazaLeft-1&&player.x<4.5;
+    const inWater=space==='outdoor'&&(overPlaza?!places.onPlazaFloor(player.x,player.z):player.x<plazaLeft-1||player.x<7.4||Boolean(current))||Boolean(current);
     if(current||cooking||Math.hypot(player.vx,player.vz)>.34) fitting=false;
     fittingBlend+=((fitting?1:0)-fittingBlend)*(1-Math.exp(-dt*(reduceMotion?18:5.6)));
     if(avatar){
@@ -1394,7 +1397,7 @@ export function createReef(canvas, places) {
     }else steamClock=0;
     wasCooking=Boolean(cooking);
     bedPulse=Math.max(0,bedPulse-dt*2.4);
-    farmBedGlow.scale.setScalar(1+bedPulse*.22);
+    farmBedGlow.scale.setScalar((1+bedPulse*.22)*places.farmIsland.scale/16);
     props?.update(t);
     juice.update(dt,{reduce:reduceMotion,viewHeight:height,fov:camera.fov});
     furniture.tick(dt);

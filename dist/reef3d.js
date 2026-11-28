@@ -58,7 +58,7 @@ try {
   if (step === quests.length && ['0', '1'].includes(savedSpot)) display = Number(savedSpot);
 } catch {}
 
-const player = { x: -9.9, z: 3.2, vx: 0, vz: 0, heading: .9, space:'outdoor' };
+const player = { x: farmIsland.arrival.x, z: farmIsland.arrival.z, vx: 0, vz: 0, heading: -Math.PI/2, space:'farm' };
 const cookingPoint={x:kitchen.x-.22,z:kitchen.z+1.02,space:'cottage'};
 const wardrobePoint={x:wardrobe.x+.18,z:wardrobe.z+1.08,space:'cottage'};
 const keys = new Set();
@@ -69,7 +69,8 @@ const clamp = (value, low, high) => Math.max(low,Math.min(high,value));
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let target, pendingAction, pendingVisit, current, cooking, boostUntil = 0, last = 0, selectedDisplay = -1;
 let frameRequest,firstFrame,hasStarted=false;
-let openFarmOnStart=window.location&&new URLSearchParams(window.location.search).get('area')==='farm';
+// The game opens at Joyce's Homebase and farm. The town loads once she leaves it.
+let openFarmOnStart=!window.location||!['plaza','cottage'].includes(new URLSearchParams(window.location.search).get('area'));
 const life=connectLife({
   state:lifeState,getView:()=>view,layout:reefLayout,player,
   onOpen(){keys.clear();stick.reset();player.vx=player.vz=0;},
@@ -575,6 +576,7 @@ export function startReef({safeMode=false}={}) {
     openFarmOnStart=false;
     changeSpace('farm',farmIsland.arrival,-Math.PI/2);
   }
+  if(new URLSearchParams(window.location.search).get('area')==='plaza')changeSpace('outdoor',reefLayout.travelLandings.home,.9);
   if(new URLSearchParams(window.location.search).get('area')==='cottage')changeSpace('cottage',cottageRoom.arrival,Math.PI);
   bindCanvas(canvas);
   updateQuest();

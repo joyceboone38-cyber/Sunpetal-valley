@@ -46,7 +46,12 @@ export function buildPlaza(scene) {
   scene.add(group);
   const state={life:null,viewHeight:800,loaded:false};
 
-  loadReefModel('./environment/underwater-plaza.glb').then(async({scene:model})=>{
+  // The town loads the first time Joyce leaves her Homebase, so the game starts light.
+  let requested=false;
+  const load=()=>{
+    if(requested)return;
+    requested=true;
+    loadReefModel('./environment/underwater-plaza.glb').then(async({scene:model})=>{
     model.name='Underwater Plaza model';
     group.add(model);
     state.loaded=true;
@@ -58,9 +63,11 @@ export function buildPlaza(scene) {
     }catch(error){
       // The plaza still shows without its motion.
     }
-  }).catch(()=>{});
+    }).catch(()=>{});
+  };
 
   return {
+    ensureLoaded:load,
     group,
     tick(time){state.life?.update(time);},
     setViewHeight(pixels){

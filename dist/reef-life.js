@@ -78,8 +78,8 @@ export function addReefLife(scene, haloTexture) {
     {x:2.9,y:1.15,z:-5.2,rx:5.8,rz:3.2,speed:.31,phase:4.9,count:12,tint:'#9bbdec'},
     {x:10.2,y:.75,z:4.0,rx:3.7,rz:1.9,speed:.55,phase:3.7,count:8,tint:'#e2d4a6'},
     // [sunpetal-alive] candy colored schools, including some around Farm Island
-    {x:-34,y:1.3,z:3.5,rx:8.4,rz:5.6,speed:.28,phase:1.2,count:12,tint:'#ffb0dd'},
-    {x:-34,y:.9,z:3.5,rx:6.0,rz:4.0,speed:.4,phase:3.1,count:9,tint:'#d2b4ff'},
+    {x:-56.5,y:1.6,z:3.5,rx:14.7,rz:9.8,speed:.28,phase:1.2,count:12,tint:'#ffb0dd'},
+    {x:-56.5,y:1.1,z:3.5,rx:10.5,rz:7.0,speed:.4,phase:3.1,count:9,tint:'#d2b4ff'},
     {x:-22,y:1.6,z:-3.0,rx:4.6,rz:3.0,speed:.36,phase:5.2,count:9,tint:'#ffd98a'},
     {x:-2.0,y:1.9,z:8.0,rx:5.0,rz:2.4,speed:.33,phase:2.3,count:8,tint:'#9fe8ff'},
     {x:-13,y:2.0,z:-8.0,rx:6.5,rz:3.0,speed:.24,phase:0.4,count:10,tint:'#ffb0dd'}
