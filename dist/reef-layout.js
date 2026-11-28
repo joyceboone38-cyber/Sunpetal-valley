@@ -29,7 +29,7 @@ const farmIsland = {
 };
 // Joyce's Conch Shell Home sits at the back of the Homebase island. Offsets are metres from the island centre.
 const farmHome={x:farmWest+2.5,z:4.2-7.6,scale:3.4,radius:2.9,yaw:0};
-const outdoorBounds={left:farmWest-17,back:-22,front:29,right:22};
+const outdoorBounds={left:farmWest-17,back:-52,front:62,right:24};
 const onFarmIsland=({x,z})=>{
   const {left,right,back,front}=farmIsland.bounds;
   return x>=left&&x<=right&&z>=back&&z<=front;
@@ -47,7 +47,7 @@ const fieldPlots=plotModel.map(([mx,mz],index)=>{
   return {x,z,number:index+1,approach:{x,z:z+1.08},yaw:plotYaw,added:index===11};
 });
 const travelLandings = {
-  home: onPlaza(-9.9,3),
+  home: {x:-20,z:11}, // south of the fountain, on the plaza deck
   reef: { x: 12, z: -1.5 }
 };
 const displaySpots = [

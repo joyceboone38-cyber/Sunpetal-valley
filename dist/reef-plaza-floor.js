@@ -1,3 +1,4 @@
+import { boardwalkAt, deckHeight } from './reef-seabed-layout.js';
 // Floor heights of the Underwater Plaza, measured from its model: the highest upward-facing
 // surface in every 1 cm square of model space (192 x 192 cells over -0.96..0.96), in thousandths
 // of a model unit. -32768 marks open water. Cells are stored row by row (z, then x).
@@ -16,7 +17,7 @@ export const onPlaza=(x,z)=>{
   return {x:+(plazaFrame.x+(x-firstFrame.x)*k).toFixed(2),z:+(plazaFrame.z+(z-firstFrame.z)*k).toFixed(2)};
 };
 // Left edge of the plaza in the world (the model reaches -0.96).
-export const plazaLeft=plazaFrame.x-.96*plazaFrame.scale;
+export const plazaLeft=-52; // the seabed town now spans x -52 to 24
 
 function cellAt(ix,iz){
   if(ix<0||iz<0||ix>=cells||iz>=cells)return empty;
@@ -40,16 +41,11 @@ function modelFloor(mx,mz){
 // off an island eases back down instead of snapping.
 const hubFloor=.047;
 // True where there is a floor under the point (an island, bridge or stair), false over open water.
-export function onPlazaFloor(x,z){
-  const {x:ox,z:oz,scale}=plazaFrame;
-  return modelFloor((x-ox)/scale,(z-oz)/scale)!==undefined;
-}
-
+export function onPlazaFloor(x,z){return boardwalkAt(x,z);}
 const smooth=(value,low,high)=>{const t=Math.min(1,Math.max(0,(value-low)/(high-low)));return t*t*(3-2*t);};
 export function floorAt(x,z){
-  // Beyond the plaza (the Sanctuary crossing in the west, Moonlace Reef in the east) the ground is level.
-  const reach=smooth(x,plazaLeft-4,plazaLeft)*(1-smooth(x,3,6));
-  return reach>0?plazaFloor(x,z)*reach:0;
+  // The town is on the sea floor: level ground, with the wooden boardwalks and decks a hand above it.
+  return boardwalkAt(x,z)?deckHeight:0;
 }
 
 function plazaFloor(x,z){

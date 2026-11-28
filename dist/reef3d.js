@@ -1,5 +1,6 @@
 import { createReef } from './reef-scene.js';
 import { reefLayout } from './reef-layout.js';
+import { seabedSolidsWorld } from './reef-seabed-layout.js';
 import { connectLife, loadLife } from './reef-activities.js';
 import { createStick } from './reef-touch.js'; // [sunpetal-stick]
 import { createDecorator } from './reef-decorate.js';
@@ -343,6 +344,10 @@ function move(now, dt) {
   const bounds=player.space==='cottage'?cottageRoom.bounds:outdoorBounds;
   player.x = clamp(player.x+player.vx*dt,bounds.left,bounds.right);
   player.z = clamp(player.z+player.vz*dt,bounds.back,bounds.front);
+  if(player.space==='outdoor')for(const solid of seabedSolidsWorld){
+    const dx=player.x-solid.x,dz=player.z-solid.z,d=Math.hypot(dx,dz);
+    if(d<solid.r){const k=solid.r/(d||.001);player.x=solid.x+dx*k;player.z=solid.z+dz*k;}
+  }
   if(player.space!=='cottage'&&reefLayout.farmHome){
     // The home is solid: slide around it instead of walking through.
     const fh=reefLayout.farmHome,dx=player.x-fh.x,dz=player.z-fh.z,d=Math.hypot(dx,dz);

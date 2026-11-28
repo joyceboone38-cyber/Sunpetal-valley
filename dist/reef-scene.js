@@ -11,7 +11,7 @@ import { buildMoonlacePearl } from './reef-keepsake.js';
 import { createStaticReefAssets, hasReefModel } from './reef-model-loader.js';
 import { createRegionalArt } from './reef-region-art.js';
 import { buildFarmIsland,buildCottageRoom } from './reef-homestead.js';
-import { buildPlaza } from './reef-plaza.js';
+import { buildSeabed as buildPlaza } from './reef-seabed.js';
 import { plazaLeft } from './reef-plaza-floor.js';
 import { createUnderwaterEnvironment } from './underwater-environment.js';
 import { loadSeaLife } from './sea-life.js';
@@ -1276,7 +1276,9 @@ export function createReef(canvas, places) {
     const fi=places.farmIsland;
     const farmFraming=inCottage?0:1-T.MathUtils.smoothstep(player.x,fi.x+9,fi.x+21);
     scene.fog.color.copy(nearWater).lerp(deepWater,depth*.82);
-    scene.fog.far=42-depth*6+farmFraming*30;
+    const townOpen=space==='outdoor'?T.MathUtils.smoothstep(player.x,-50,-40):0;
+    scene.fog.near=11+13*townOpen;
+    scene.fog.far=42-depth*6+farmFraming*30+30*townOpen;
     scene.background.copy(scene.fog.color);
     shafts.visible=quality!=='low';
     environment?.animate(t);
@@ -1381,7 +1383,7 @@ export function createReef(canvas, places) {
       }
     }
     if(space!=='farm'){plaza.ensureLoaded();startSeaLife();} // the town and its sea life load once she leaves her Homebase
-    const overPlaza=player.x>=plazaLeft-1&&player.x<4.5;
+    const overPlaza=player.x>=plazaLeft-1&&player.x<24;
     const inWater=space==='outdoor'&&(overPlaza?!places.onPlazaFloor(player.x,player.z):player.x<plazaLeft-1||player.x<7.4||Boolean(current))||Boolean(current);
     if(current||cooking||Math.hypot(player.vx,player.vz)>.34) fitting=false;
     fittingBlend+=((fitting?1:0)-fittingBlend)*(1-Math.exp(-dt*(reduceMotion?18:5.6)));
