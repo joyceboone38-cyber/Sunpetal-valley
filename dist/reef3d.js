@@ -337,7 +337,9 @@ function move(now, dt) {
     [x,z]=[x*cos+z*sin,z*cos-x*sin];
   }
   const magnitude = Math.hypot(x,z) || 1;
-  const speed = (keys.has('shift') || now < boostUntil ? 11.2 : 6.6)*pace*(pad.active?Math.min(1,Math.hypot(pad.x,pad.z)):1)*life.speedBoost;
+  // The Homebase and the seabed town are about 1.7x bigger than the old islands, so walking scales with them.
+  const worldPace = player.space==='cottage' ? 1 : player.space==='farm' ? 1.75 : 1.65;
+  const speed = (keys.has('shift') || now < boostUntil ? 11.2 : 6.6)*worldPace*pace*(pad.active?Math.min(1,Math.hypot(pad.x,pad.z)):1)*life.speedBoost;
   const response = 1-Math.exp(-dt*(distance(player,farm)<2.8 ? 15 : x || z ? 9 : 6));
   player.vx += (x/magnitude*speed-player.vx)*response;
   player.vz += (z/magnitude*speed-player.vz)*response;
