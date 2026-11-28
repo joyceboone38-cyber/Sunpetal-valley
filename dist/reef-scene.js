@@ -13,6 +13,8 @@ import { createRegionalArt } from './reef-region-art.js';
 import { buildFarmIsland,buildCottageRoom } from './reef-homestead.js';
 import { buildPlaza } from './reef-plaza.js';
 import { plazaLeft } from './reef-plaza-floor.js';
+import { createUnderwaterEnvironment } from './underwater-environment.js';
+import { loadSeaLife } from './sea-life.js';
 import { createFurniture } from './reef-furniture.js'; // [sunpetal-shop]
 import { createJuice } from './reef-juice.js';
 import { createProps } from './reef-props.js';
@@ -1126,6 +1128,16 @@ export function createReef(canvas, places) {
   const reefLife=addReefLife(scene,haloTexture);
   const farmArea=buildFarmIsland(scene,places,materials,bed);
   const plaza=buildPlaza(scene);
+  // The world around the town: painted 360 degree backdrop, sunbeams, bubbles and sparkles.
+  const seaCenter=new T.Vector3(-34,0,4);
+  const underwater=createUnderwaterEnvironment(scene,{center:seaCenter,radius:34,floorY:-4,lights:false,ownFog:false,quality});
+  // Sea creatures (needs assets/sea-life/*.glb; the game runs fine without them).
+  let seaLife=null,seaRequested=false;
+  const startSeaLife=()=>{
+    if(seaRequested)return;
+    seaRequested=true;
+    loadSeaLife(scene,{center:seaCenter,radius:20,floorY:-3,basePath:'./assets/sea-life/',quality}).then(life=>{seaLife=life;}).catch(()=>{});
+  };
   const farmBedBoxes=places.fieldPlots.map(({x,z})=>new T.Box3(
     new T.Vector3(x-.9,-.1,z-.9),new T.Vector3(x+.9,.9,z+.9)
   ));
@@ -1244,6 +1256,8 @@ export function createReef(canvas, places) {
       farmArea.update(crops,reduceMotion);
       farmArea.tick?.(dt,t);
       plaza.tick(t);
+      underwater.update(t,camera,{domElement:canvas});
+      seaLife?.update(t,dt);
       farmBedBoxes.forEach((box,index)=>{box.max.y=(crops[index]?.s??0)>=2?.95:.5;});
     }
     const featuredBed=places.fieldPlots[farmBed];
@@ -1366,7 +1380,7 @@ export function createReef(canvas, places) {
         mote.scale.setScalar(step===1||current?1:.52);
       }
     }
-    if(space!=='farm')plaza.ensureLoaded(); // the town loads once she leaves her Homebase
+    if(space!=='farm'){plaza.ensureLoaded();startSeaLife();} // the town and its sea life load once she leaves her Homebase
     const overPlaza=player.x>=plazaLeft-1&&player.x<4.5;
     const inWater=space==='outdoor'&&(overPlaza?!places.onPlazaFloor(player.x,player.z):player.x<plazaLeft-1||player.x<7.4||Boolean(current))||Boolean(current);
     if(current||cooking||Math.hypot(player.vx,player.vz)>.34) fitting=false;
