@@ -343,6 +343,11 @@ function move(now, dt) {
   const bounds=player.space==='cottage'?cottageRoom.bounds:outdoorBounds;
   player.x = clamp(player.x+player.vx*dt,bounds.left,bounds.right);
   player.z = clamp(player.z+player.vz*dt,bounds.back,bounds.front);
+  if(player.space!=='cottage'&&reefLayout.farmHome){
+    // The home is solid: slide around it instead of walking through.
+    const fh=reefLayout.farmHome,dx=player.x-fh.x,dz=player.z-fh.z,d=Math.hypot(dx,dz);
+    if(d<fh.radius){const k=fh.radius/(d||.001);player.x=fh.x+dx*k;player.z=fh.z+dz*k;}
+  }
   if (Math.hypot(player.vx,player.vz) > .25) {
     const heading = Math.atan2(player.vx,player.vz);
     const difference = Math.atan2(Math.sin(heading-player.heading),Math.cos(heading-player.heading));

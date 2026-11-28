@@ -27,6 +27,8 @@ const farmIsland = {
   bounds:{left:farmWest-12.6,right:farmWest+12.6,back:4.2-13.3,front:4.2+13.3},
   ellipse:{rx:11.2,rz:11.7}
 };
+// Joyce's Conch Shell Home sits at the back of the Homebase island. Offsets are metres from the island centre.
+const farmHome={x:farmWest+2.5,z:4.2-7.6,scale:3.4,radius:2.9,yaw:0};
 const outdoorBounds={left:farmWest-17,back:-22,front:29,right:22};
 const onFarmIsland=({x,z})=>{
   const {left,right,back,front}=farmIsland.bounds;
@@ -58,6 +60,6 @@ const displaySpots = [
 const homeVisible = false;
 
 export const reefLayout = {
-  farm, cottage, cottageLanding, cottageDoor, farmDock, farmIsland, outdoorBounds, onFarmIsland, cottageRoom, fieldPlots,
+  farm, farmHome, cottage, cottageLanding, cottageDoor, farmDock, farmIsland, outdoorBounds, onFarmIsland, cottageRoom, fieldPlots,
   homeVisible, floorAt, onPlazaFloor, jelly, shelf, moonlacePearl, station, grotto, glass, secondBed, wardrobe, kitchen, nook, displaySpots, travelLandings
 };

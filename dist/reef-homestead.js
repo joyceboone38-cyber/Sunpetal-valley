@@ -93,6 +93,18 @@ export function buildFarmIsland(scene,layout,materials){
   fallback.visible=false;
   group.add(fallback);
 
+  // The Conch Shell Home: painted vertex colours, no texture. Its base is the rock garden around the door.
+  if(layout.farmHome){
+    const fh=layout.farmHome;
+    loadReefModel('./environment/conch-shell-home.glb').then(({scene:home})=>{
+      home.name='Conch Shell Home';
+      home.scale.setScalar(fh.scale);
+      home.rotation.y=fh.yaw||0;
+      home.position.set(fh.x-farmIsland.x,groundY+.9*fh.scale-.12,fh.z-farmIsland.z);
+      home.traverse(object=>{if(object.isMesh){object.castShadow=false;object.receiveShadow=true;if(object.material){object.material.color?.setScalar(.8);object.material.envMapIntensity=.45;object.material.roughness=.5;}}});
+      group.add(home);
+    }).catch(()=>{});
+  }
   loadReefModel('./environment/pearl-reef-sanctuary.glb').then(async({scene:model})=>{
     model.name='Pearl Reef Sanctuary';
     model.scale.setScalar(farmIsland.scale);
